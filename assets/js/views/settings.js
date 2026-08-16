@@ -89,8 +89,9 @@ export function render(root, ctx) {
               { sub: v ? 'Changes flow both ways within a few seconds.' : 'This device now keeps its own copy.' });
             ctx.rerender();
           })
-        : el('div.notice', el('span', '⚠'), el('span',
-            'Set a passphrase first. The sync store refuses anything that is not encrypted, so there is nothing safe to send yet.')),
+        : el('div.notice', el('span', '⏸'), el('span',
+            'Sync is ready but waiting on a passphrase — the store refuses anything unencrypted. ' +
+            'Set one above and it starts on its own.')),
 
       sync.isEnabled() ? el('div.kpi',
         kbox('r' + st.rev, 'Revision'),
@@ -219,7 +220,8 @@ function passphraseDialog(ctx, changing) {
           await vault.protect(next, S.S, hint);
           c();
           confetti({ count: 60, spread: .7 });
-          toast('Vault encrypted', { sub: 'Safe to put on the internet now.', kind: 'ok', ms: 5000 });
+          toast('Vault encrypted', { sub: 'Everything is now stored as ciphertext.', kind: 'ok', ms: 5000 });
+          await ctx.enableSync();      // sync needs a passphrase; it now has one
           ctx.rerender(); ctx.resetIdle();
         } },
     ],

@@ -36,6 +36,7 @@ const isRemote = !['localhost', '127.0.0.1', '::1', ''].includes(location.hostna
 /* ══════════════ context handed to every view ══════════════ */
 const ctx = {
   go, rerender, lock, resetIdle, replayTour,
+  enableSync: () => enableSyncIfPossible(),
   setSub: t => { $('#view-sub').textContent = t || ''; },
 };
 
@@ -164,19 +165,30 @@ async function startSync() {
   sync.restoreEnabled();
   sync.onChange(() => { if (current === 'settings') rerender(); });
 
-  // A store exists and this device is unlocked against it — turn sync on by
-  // default rather than making the user find the switch.
-  if (!S.setting('syncEnabled') && info.hasVault && vault.isProtected()) {
-    sync.setEnabled(true);
-  } else if (sync.isEnabled()) {
-    sync.start();
-  }
+  // Turn sync on unless the user has explicitly switched it off. It only needs
+  // a passphrase — waiting for the server to already hold a vault was a
+  // deadlock, because nothing could seed one until sync was running.
+  const choice = S.setting('syncEnabled');
+  if (choice !== false && vault.isProtected()) sync.setEnabled(true);
+  else if (sync.isEnabled()) sync.start();
 
   if (sync.isEnabled()) {
     const r = await sync.pull();
-    if (r === 'merged') UI.toast('Synced from your PC', { sub: 'Local and remote entries merged.', kind: 'ok' });
-    else if (r === 'seeded') UI.toast('Sync store seeded', { sub: 'This device is now the source of truth.', kind: 'ok' });
+    if (r === 'merged') UI.toast('Synced', { sub: 'Entries from this machine merged in.', kind: 'ok' });
+    else if (r === 'seeded') UI.toast('Sync started', { sub: 'Your vault now also lives on this machine, encrypted.', kind: 'ok' });
     else if (r === 'denied') UI.toast('Sync refused', { sub: sync.status().lastError, kind: 'bad', ms: 8000 });
+  }
+}
+
+/** Called once a passphrase exists, so sync can begin without a page reload. */
+async function enableSyncIfPossible() {
+  if (!sync.status().available) return;
+  if (S.setting('syncEnabled') === false) return;
+  if (!vault.isProtected()) return;
+  sync.setEnabled(true);
+  const r = await sync.pull();
+  if (r === 'seeded' || r === 'ok') {
+    UI.toast('Sync started', { sub: 'Changes now save to this machine too, encrypted.', kind: 'ok' });
   }
 }
 
@@ -421,13 +433,14 @@ function firstRun() {
       sub: 'A private, permanent record — and a few things to help you not add to it.',
       body: el('div', { style: { display: 'grid', gap: '14px' } },
         el('p.hint', { style: { fontSize: '13.5px', lineHeight: 1.7 } },
-          'Everything stays in this browser. Nothing is uploaded, and there is no account. Start by naming one behaviour you want to see on a calendar.'),
+          'Everything stays on your own machine. No account, no server, nothing uploaded. Start by naming one behaviour you want to see on a calendar.'),
         el('div.notice', el('span', '🔒'), el('span',
           'Relapses cannot be deleted once logged — only amended, with a record of the change. That is the whole point of the thing.')),
-        el('div.notice.info', el('span', 'ℹ'), el('span',
-          'If you ever host this online, set a passphrase in Settings first. It encrypts the vault properly rather than just hiding it.'))),
+        el('div.notice.info', el('span', '🔑'), el('span',
+          'Set a passphrase in Settings when you are ready. It encrypts everything with a key only you hold — and it is what switches on syncing between your devices.'))),
       footer: [
         { label: 'Look around', onClick: c => c() },
+        { label: 'Set a passphrase', onClick: c => { c(); go('settings'); } },
         { label: 'Create a habit', cls: 'btn-primary', onClick: c => { c(); habitDialog(); } },
       ],
     });

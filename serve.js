@@ -29,7 +29,10 @@ const LAN     = has('lan');
 const PORT    = Number(flag('port', process.env.PORT || (LAN ? 4443 : 4321)));
 const HOST    = flag('host', LAN ? '0.0.0.0' : '127.0.0.1');
 const USE_TLS = LAN || has('https');
-const SYNC    = LAN || has('sync');
+// On by default: it is what keeps the browser and this machine in step, and it
+// gives the vault a home on disk that survives the browser clearing storage.
+// The store only ever holds ciphertext, so this costs nothing in privacy.
+const SYNC    = !has('no-sync');
 const OPEN    = has('open');
 const ROOT    = __dirname;
 const DATA    = path.join(ROOT, '.anchor-data');
@@ -274,10 +277,14 @@ server.listen(PORT, HOST, () => {
     }
   }
   console.log(line);
-  console.log(`     Sync store: ${SYNC ? 'on  → ' + path.relative(ROOT, VAULT) : 'off'}`);
+  console.log(`     Sync store: ${SYNC ? 'on  → ' + path.relative(ROOT, VAULT) : 'off (--no-sync)'}`);
   if (SYNC) {
     const doc = readVault();
-    console.log(`     Stored:     ${doc ? `revision ${doc.rev}, updated ${doc.updatedAt}` : 'nothing yet'}`);
+    if (doc) {
+      console.log(`     Stored:     revision ${doc.rev}, updated ${doc.updatedAt}`);
+    } else {
+      console.log('     Stored:     nothing yet — set a passphrase in the app and it will seed');
+    }
     console.log('     The store only ever holds ciphertext. This process cannot read your entries.');
   }
   if (USE_TLS) {

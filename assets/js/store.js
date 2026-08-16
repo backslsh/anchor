@@ -39,7 +39,9 @@ export function blank() {
       seen: {},
       showClean: true,
       currency: '$',
-      syncEnabled: false,
+      // null = never decided, so sync switches itself on as soon as a
+      // passphrase exists. true/false is an explicit choice and is respected.
+      syncEnabled: null,
     },
     savedAt: null,        // stamped on every write; arbitrates a sync merge
   };

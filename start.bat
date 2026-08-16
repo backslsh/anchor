@@ -10,5 +10,9 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+echo.
+echo   Starting Anchor on this PC only (127.0.0.1).
+echo   Your vault also saves to .anchor-data\vault.json, encrypted.
+echo.
 node serve.js --open %*
 pause

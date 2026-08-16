@@ -53,10 +53,16 @@ else on your network can reach it.
 | `--lan` | HTTPS + sync, reachable from your phone (see below) |
 | `--port 5000` | Use a different port |
 | `--open` | Open your browser automatically |
-| `--sync` | Enable the sync store without HTTPS (localhost only) |
+| `--no-sync` | Disable the on-disk sync store (it is on by default) |
 
 > **Why a server at all?** The app uses ES modules, which browsers refuse to
 > load over `file://`. Opening `index.html` directly will show a blank page.
+
+**Sync is on by default**, including for local-only use. Once you set a
+passphrase, your vault is written to `.anchor-data/vault.json` as ciphertext as
+well as living in the browser — so your history survives clearing site data, and
+any other device you point at this server shares the same record. Nothing syncs
+before a passphrase exists, because the store refuses unencrypted data.
 
 ---
 
