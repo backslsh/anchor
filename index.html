@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" data-accent="aurora">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#08090c" />
+<meta name="robots" content="noindex, nofollow, noarchive" />
+<title>Anchor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='13' fill='none' stroke='%237c5cff' stroke-width='3'/><circle cx='16' cy='16' r='4' fill='%2300d6c2'/></svg>" />
+<link rel="stylesheet" href="./assets/css/app.css" />
+</head>
+<body>
+
+<!-- ══════════════ LOCK SCREEN ══════════════ -->
+<div id="lock" class="lock hidden" aria-hidden="true">
+  <canvas id="lock-bg" class="lock-bg"></canvas>
+  <div class="lock-card">
+    <div class="lock-mark"><span class="ring"></span><span class="dot"></span></div>
+    <h1 class="lock-title">Anchor</h1>
+    <p class="lock-sub" id="lock-sub">Enter your passphrase</p>
+    <form id="lock-form" autocomplete="off">
+      <div class="field-wrap">
+        <input id="lock-pass" type="password" placeholder="Passphrase" autocomplete="current-password" spellcheck="false" />
+        <button type="button" class="peek" id="lock-peek" title="Show" aria-label="Show passphrase">◡</button>
+      </div>
+      <div class="field-wrap hidden" id="lock-confirm-wrap">
+        <input id="lock-confirm" type="password" placeholder="Confirm passphrase" autocomplete="new-password" spellcheck="false" />
+      </div>
+      <div id="lock-strength" class="strength hidden"><span></span></div>
+      <button class="btn btn-primary btn-block" id="lock-submit" type="submit">Unlock</button>
+      <p class="lock-err" id="lock-err"></p>
+    </form>
+    <p class="lock-foot" id="lock-foot"></p>
+  </div>
+</div>
+
+<!-- ══════════════ APP SHELL ══════════════ -->
+<div id="shell" class="shell hidden">
+
+  <aside class="rail">
+    <div class="rail-brand">
+      <span class="brand-mark"><span class="ring"></span><span class="dot"></span></span>
+      <span class="brand-name">Anchor</span>
+    </div>
+    <nav class="rail-nav" id="rail-nav">
+      <button class="nav-item" data-view="dashboard"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z"/></svg><span>Dashboard</span></button>
+      <button class="nav-item" data-view="calendar"><svg viewBox="0 0 24 24"><path d="M7 2v3M17 2v3M3.5 9h17M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Calendar</span></button>
+      <button class="nav-item" data-view="habits"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6.1L12 16.8 6.6 19.7l1.2-6.1L3.3 9.4l6.1-.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>Habits</span></button>
+      <button class="nav-item" data-view="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="1.4"/></svg><span>Goals</span></button>
+      <button class="nav-item" data-view="insights"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Insights</span></button>
+      <button class="nav-item" data-view="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Settings</span></button>
+    </nav>
+    <div class="rail-foot">
+      <button class="rail-mini" id="btn-panic" title="Urge support (P)">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-7.5-10A4.5 4.5 0 0112 8.2 4.5 4.5 0 0119.5 11c0 5.3-7.5 10-7.5 10z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span>Urge</span>
+      </button>
+      <button class="rail-mini" id="btn-lock" title="Lock (Ctrl+L)">
+        <svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 10.5V7.8a4 4 0 018 0v2.7" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+        <span>Lock</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-l">
+        <h2 class="view-title" id="view-title">Dashboard</h2>
+        <span class="view-sub" id="view-sub"></span>
+      </div>
+      <div class="topbar-r">
+        <button class="chip chip-ghost" id="btn-palette" title="Command palette (Ctrl+K)">
+          <svg viewBox="0 0 24 24"><path d="M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM21 21l-5.2-5.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <span class="kbd">Ctrl K</span>
+        </button>
+        <button class="btn btn-primary btn-log" id="btn-log">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          Log relapse
+        </button>
+      </div>
+    </header>
+    <div class="viewport" id="viewport"></div>
+  </main>
+</div>
+
+<!-- ══════════════ OVERLAYS ══════════════ -->
+<div id="modal-root" class="modal-root hidden"><div class="modal-scrim"></div><div class="modal-box" id="modal-box"></div></div>
+
+<div id="palette" class="palette hidden">
+  <div class="palette-scrim"></div>
+  <div class="palette-box">
+    <input id="palette-input" placeholder="Type a command or search…" spellcheck="false" autocomplete="off" />
+    <div class="palette-list" id="palette-list"></div>
+    <div class="palette-foot"><span><b>↑↓</b> navigate</span><span><b>↵</b> run</span><span><b>esc</b> close</span></div>
+  </div>
+</div>
+
+<div id="breathe" class="breathe hidden">
+  <div class="breathe-inner">
+    <div class="breathe-orb"><div class="breathe-core"></div><div class="breathe-halo"></div></div>
+    <div class="breathe-phase" id="breathe-phase">Breathe in</div>
+    <div class="breathe-count" id="breathe-count">4</div>
+    <div class="breathe-ctx" id="breathe-ctx"></div>
+    <button class="btn btn-ghost" id="breathe-close">I'm okay now</button>
+  </div>
+</div>
+
+<div id="toasts" class="toasts"></div>
+<canvas id="fx" class="fx"></canvas>
+<div id="shortcuts" class="sheet hidden"></div>
+
+<script type="module" src="./assets/js/app.js"></script>
+<noscript><p style="color:#eee;font:16px system-ui;padding:40px">Anchor needs JavaScript enabled.</p></noscript>
+</body>
+</html>

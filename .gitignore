@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────
+#  Anchor — everything personal lives here. Never commit it.
+# ─────────────────────────────────────────────────────────────
+
+# The sync store (your encrypted vault), its backups, and the TLS
+# private key generated for LAN mode. Even encrypted, this is yours.
+.anchor-data/
+
+# Exported backups, wherever they land
+anchor-backup-*.json
+*.anchor.json
+
+# Local server overrides
+.env
+.env.*
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node, if anyone ever adds tooling
+node_modules/
+npm-debug.log*

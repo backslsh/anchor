@@ -1,0 +1,11 @@
+# Normalise line endings so the repo stays consistent across platforms.
+* text=auto eol=lf
+
+# Windows launchers need CRLF or cmd.exe mis-parses them.
+*.bat text eol=crlf
+
+# Never diff these as text.
+*.pem binary
+*.png binary
+*.jpg binary
+*.webp binary
