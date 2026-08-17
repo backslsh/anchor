@@ -58,10 +58,13 @@ async function boot() {
 
   // ?demo fills an *empty* vault with sample data. It cannot touch a real one:
   // seedDemo() bails if any habit or entry already exists.
-  if (new URLSearchParams(location.search).has('demo')) {
+  // ?demo=locked keeps authentic theme lock states, for screenshots of the
+  // ladder; the plain form unlocks every theme so they can be looked at.
+  const demoParam = new URLSearchParams(location.search).get('demo');
+  if (demoParam !== null) {
     try {
       const { seedDemo } = await import('./demo.js');
-      seedDemo();
+      seedDemo({ unlockAll: demoParam !== 'locked' });
     } catch (e) { console.warn('[anchor] demo seed failed', e); }
   }
 

@@ -139,6 +139,11 @@ http://localhost:4321/?demo
 
 Or from the browser console: `anchor.demo()`
 
+The demo also has **every theme unlocked**, so you can try the palettes without
+waiting a year for the gold one. That applies to the demo vault only — a real
+vault still has to earn them. Use `?demo=locked` if you want authentic lock
+states instead.
+
 It only fills an **empty** vault. If you already have a habit or a single entry
 it refuses, so it can never overwrite a real record. Clear it afterwards with
 **Settings → Erase everything**.

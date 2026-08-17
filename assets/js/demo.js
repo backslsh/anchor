@@ -12,6 +12,7 @@
 
 import { uid, iso, addDays } from './util.js';
 import * as S from './store.js';
+import { THEMES, ladder } from './themes.js';
 
 /* mulberry32 — small, fast, deterministic */
 function rng(seed) {
@@ -51,7 +52,14 @@ const LESSONS = [
   'Boredom is the real trigger, not stress. Plan the evening.',
 ];
 
-export function buildDemoVault() {
+/**
+ * @param unlockAll  Hand the demo every theme, including the off-ladder secret,
+ *                   so the palettes can actually be looked at. The demo vault
+ *                   is the only place this happens — a real vault still has to
+ *                   earn them. Pass false for authentic lock states, which is
+ *                   what you want for screenshots of the ladder itself.
+ */
+export function buildDemoVault({ unlockAll = true } = {}) {
   const rand = rng(20260816);
   const day = n => iso(addDays(new Date(), -n));
   const pick = arr => arr[Math.floor(rand() * arr.length)];
@@ -158,9 +166,15 @@ export function buildDemoVault() {
     settings: {
       ...base.settings,
       favoriteQuotes: ['q56', 'q78'],
-      seen: { welcome: Date.now(), 'tip:shift': Date.now(), 'tip:palette': Date.now(),
-              'tip:gem': Date.now(), 'tip:lesson': Date.now(), 'tip:live': Date.now(),
-              'tip:keys': Date.now() },
+      unlocked: unlockAll ? THEMES.map(t => t.id) : [],
+      seen: {
+        welcome: Date.now(), 'tip:shift': Date.now(), 'tip:palette': Date.now(),
+        'tip:gem': Date.now(), 'tip:lesson': Date.now(), 'tip:live': Date.now(),
+        'tip:keys': Date.now(),
+        // pre-acknowledge the ladder so browsing the demo does not fire a
+        // celebration for a streak nobody actually ran
+        ...Object.fromEntries(ladder().map(t => ['theme:' + t.id, Date.now()])),
+      },
       syncEnabled: false,
     },
     savedAt: new Date().toISOString(),
@@ -171,15 +185,16 @@ export function buildDemoVault() {
  * Load the sample vault. Refuses if there is anything real here, so it can
  * never overwrite a genuine record.
  */
-export function seedDemo({ force = false } = {}) {
+export function seedDemo({ force = false, unlockAll = true } = {}) {
   if (!force && (S.relapses().length || S.habits({ all: true }).length)) {
     console.warn('[anchor] demo: this vault already has data. seedDemo({force:true}) to replace it.');
     return false;
   }
-  S.hydrate(buildDemoVault());
+  S.hydrate(buildDemoVault({ unlockAll }));
   S.flush();
   const st = S.currentStreak(), best = S.longestStreak();
   console.info(`[anchor] demo vault loaded — ${S.relapses().length} entries, ` +
-               `${st.days}-day run against a ${best.days}-day record.`);
+               `${st.days}-day run against a ${best.days}-day record` +
+               (unlockAll ? ', all themes unlocked.' : '.'));
   return true;
 }

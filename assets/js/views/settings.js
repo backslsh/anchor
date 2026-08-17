@@ -23,7 +23,10 @@ export function render(root, ctx) {
     el('div',
       el('div.row-b', { style: { marginBottom: '10px' } },
         el('label.fl', { style: { margin: 0 } }, 'Theme'),
-        el('span.hint', `${unlockedCount(best, manual)} of ${THEMES.filter(t => !t.secret).length} unlocked`)),
+        // A secret only joins the total once found, so the count never reads
+        // as more unlocked than exist.
+        el('span.hint', `${unlockedCount(best, manual)} of ` +
+          `${THEMES.filter(t => !t.secret || isUnlocked(t, best, manual)).length} unlocked`)),
 
       el('div.themes', THEMES.map(t => {
         const open = isUnlocked(t, best, manual);
