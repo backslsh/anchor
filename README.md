@@ -25,7 +25,29 @@ you from.
 
 ---
 
-## Quick start
+## Get it
+
+### Download (no install, nothing to set up)
+
+Grab the file for your system from the
+[latest release](https://github.com/YOUR-USERNAME/anchor/releases/latest):
+
+| | |
+| --- | --- |
+| Windows | `Anchor-windows.exe` |
+| macOS | `Anchor-macos` |
+| Linux | `Anchor-linux` |
+
+Double-click it. Anchor opens in your browser and that's it — no Node, no npm,
+no installer, no admin rights. It is a single self-contained file, and it puts
+your data in a `.anchor-data` folder next to itself, so you can keep the whole
+thing on a USB stick if you like.
+
+macOS will refuse an unsigned download the first time: **right-click → Open**,
+then confirm. (Signing costs $99/year, which rather defeats the point of a free
+tool.) On Linux you may need `chmod +x Anchor-linux` first.
+
+### Or run it from source
 
 ```bash
 git clone https://github.com/YOUR-USERNAME/anchor.git
@@ -33,13 +55,12 @@ cd anchor
 node serve.js --open
 ```
 
-Windows users can just double-click **`start.bat`**.
+Windows users can just double-click **`start.bat`**. Node 18+ is the only
+requirement — no `npm install`, no bundler, no framework.
 
-Node 18+ is the only requirement. There is nothing to install — no `npm
-install`, no bundler, no framework.
-
-On first run you get a blank slate: no habits, no entries, no passphrase. Set
-one in **Settings → Privacy & lock** and it encrypts everything from then on.
+Either way, first run gives you a blank slate: no habits, no entries, no
+passphrase. Set one in **Settings → Privacy & lock** and it encrypts everything
+from then on.
 
 ---
 
@@ -308,6 +329,30 @@ assets/js/
   quotes.js           ~120 lines in rotation
   util.js             DOM builder + date helpers
   views/              dashboard · calendar · habits · goals · insights · settings
+```
+
+---
+
+## Building the executables
+
+```bash
+node build.js
+```
+
+Produces `dist/Anchor-<platform>` using Node's built-in Single Executable
+Application support: `serve.js` and every web asset are embedded into a copy of
+the Node binary. The result is ~80 MB, because it contains a whole JavaScript
+runtime, and depends on nothing.
+
+The only build-time dependency is `postject`, fetched on demand via `npx`, which
+performs the injection. Nothing from it ends up in the output.
+
+SEA cannot cross-compile — a Windows `.exe` has to be built on Windows.
+`.github/workflows/release.yml` builds all three platforms on a tag push, smoke
+tests each one from an empty directory, and attaches them to a draft release:
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
 ```
 
 ---

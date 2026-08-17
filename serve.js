@@ -18,6 +18,14 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFileSync, execFile } = require('child_process');
 
+/* ── packaged or not ─────────────────────────────────────────
+   Built with `node build.js`, the whole app is embedded in a single
+   executable and the web assets are read out of the bundle instead of
+   off disk. Everything below has to work either way. */
+let sea = null;
+try { sea = require('node:sea'); } catch {}
+const PACKAGED = !!(sea && sea.isSea());
+
 const args = process.argv.slice(2);
 const has = n => args.includes('--' + n);
 const flag = (name, fallback) => {
@@ -33,9 +41,24 @@ const USE_TLS = LAN || has('https');
 // gives the vault a home on disk that survives the browser clearing storage.
 // The store only ever holds ciphertext, so this costs nothing in privacy.
 const SYNC    = !has('no-sync');
-const OPEN    = has('open');
-const ROOT    = __dirname;
-const DATA    = path.join(ROOT, '.anchor-data');
+// A packaged app has no terminal to read the URL from, so open the browser.
+const OPEN    = has('open') || (PACKAGED && !has('no-open'));
+const ROOT    = PACKAGED ? path.dirname(process.execPath) : __dirname;
+
+/** Keep the vault beside the executable so the app stays portable, but fall
+    back to the home directory when that location is read-only (Program Files,
+    a DMG, a locked-down share). */
+function resolveDataDir() {
+  for (const dir of [path.join(ROOT, '.anchor-data'), path.join(os.homedir(), '.anchor')]) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.accessSync(dir, fs.constants.W_OK);
+      return dir;
+    } catch { /* try the next one */ }
+  }
+  return path.join(os.tmpdir(), 'anchor-data');
+}
+const DATA    = resolveDataDir();
 const CERTS   = path.join(DATA, 'certs');
 const VAULT   = path.join(DATA, 'vault.json');
 const BACKUPS = path.join(DATA, 'backups');
@@ -221,18 +244,35 @@ async function onRequest(req, res) {
   }
 
   if (urlPath.endsWith('/')) urlPath += 'index.html';
-  const filePath = path.join(ROOT, path.normalize(urlPath).replace(/^([/\\])+/, ''));
-  if (!filePath.startsWith(ROOT)) return send(res, 403, 'Forbidden');
-  if (filePath.startsWith(DATA)) return send(res, 403, 'Forbidden');   // never serve the store
+  const rel = path.normalize(urlPath).replace(/^([/\\])+/, '');
 
-  fs.stat(filePath, (err, st) => {
-    if (err || !st.isFile()) {
-      return fs.readFile(path.join(ROOT, 'index.html'), (e2, buf) =>
-        e2 ? send(res, 404, 'Not found') : respond(res, 200, buf, '.html'));
-    }
-    fs.readFile(filePath, (e3, buf) =>
-      e3 ? send(res, 500, 'Read error') : respond(res, 200, buf, path.extname(filePath)));
-  });
+  // Refuse anything aimed at the data directory outright. readStatic() would
+  // decline it anyway and fall through to index.html, but a silent 200 hides
+  // the intent — better that this fails loudly if the guard ever regresses.
+  if (/^\.anchor-data([/\\]|$)/.test(rel)) return send(res, 403, 'Forbidden');
+
+  const buf = readStatic(rel);
+  if (buf) return respond(res, 200, buf, path.extname(rel));
+
+  const fallback = readStatic('index.html');            // single-page app
+  return fallback ? respond(res, 200, fallback, '.html') : send(res, 404, 'Not found');
+}
+
+/** Read a web asset, from the bundle when packaged and from disk otherwise. */
+function readStatic(rel) {
+  const key = rel.split(path.sep).join('/');
+  if (PACKAGED) {
+    try {
+      const ab = sea.getRawAsset(key);
+      return ab ? Buffer.from(ab) : null;
+    } catch { return null; }                            // not bundled
+  }
+  const full = path.join(ROOT, rel);
+  if (!full.startsWith(ROOT)) return null;              // no traversal out of the root
+  if (full.startsWith(DATA)) return null;               // never serve the vault
+  try {
+    return fs.statSync(full).isFile() ? fs.readFileSync(full) : null;
+  } catch { return null; }
 }
 
 function respond(res, code, buf, ext) {
@@ -277,7 +317,7 @@ server.listen(PORT, HOST, () => {
     }
   }
   console.log(line);
-  console.log(`     Sync store: ${SYNC ? 'on  → ' + path.relative(ROOT, VAULT) : 'off (--no-sync)'}`);
+  console.log(`     Your data:  ${SYNC ? DATA : 'in the browser only (--no-sync)'}`);
   if (SYNC) {
     const doc = readVault();
     if (doc) {
@@ -299,7 +339,8 @@ server.listen(PORT, HOST, () => {
     console.log('     Use --lan instead of --host 0.0.0.0.');
   }
   console.log('');
-  console.log('  Ctrl+C to stop.');
+  console.log(PACKAGED ? '  Closing this window stops Anchor. Your data stays where it is.'
+                       : '  Ctrl+C to stop.');
   console.log('');
   if (OPEN) {
     const url = `${scheme}://localhost:${PORT}/`;
