@@ -2,7 +2,7 @@
 
 import { el, clear, plural, relDate, fmtDate, humanDays, rgba, iso } from '../util.js';
 import * as S from '../store.js';
-import { attachTip, toast } from '../ui.js';
+import { attachTip, tipBody } from '../ui.js';
 import { habitDialog, relapseDialog, dayDialog } from '../forms.js';
 
 export function render(root, ctx) {
@@ -71,7 +71,7 @@ function card(h, ctx, dim = false) {
       el('div.mini-heat', last30.map(d => {
         const i = el('i', { style: { background: d.n ? rgba(h.color, Math.min(1, .35 + d.n * .25)) : 'var(--surface-3)',
           cursor: 'pointer' } });
-        attachTip(i, `<b>${fmtDate(d.date, 'short')}</b>${d.n ? plural(d.n, 'entry', 'entries') : 'clean'}`);
+        attachTip(i, tipBody(fmtDate(d.date, 'short'), d.n ? plural(d.n, 'entry', 'entries') : 'clean'));
         i.onclick = () => dayDialog(d.date);
         return i;
       }))),

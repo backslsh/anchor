@@ -1,6 +1,6 @@
 /* app.js — boot, routing, lock flow, keyboard layer, easter eggs. */
 
-import { $, el, clear, todayISO, plural, relDate, escapeHtml } from './util.js';
+import { $, el, clear, todayISO, plural, relDate } from './util.js';
 import * as S from './store.js';
 import * as vault from './vault.js';
 import * as sync from './sync.js';
@@ -75,10 +75,15 @@ function showLock() {
   lock.setAttribute('aria-hidden', 'false');
   field ||= mountField($('#lock-bg'));
 
+  // Built as DOM rather than markup: the hint is user text, and on a synced
+  // device it is text that arrived from somewhere else.
   const hint = vault.getHint();
-  $('#lock-foot').innerHTML = hint
-    ? `Hint: ${escapeHtml(hint)}<br>Encrypted with AES-256-GCM on this device.`
-    : 'Encrypted with AES-256-GCM on this device. Nothing leaves your browser.';
+  const foot = clear($('#lock-foot'));
+  if (hint) {
+    foot.append('Hint: ' + hint, el('br'), 'Encrypted with AES-256-GCM on this device.');
+  } else {
+    foot.append('Encrypted with AES-256-GCM on this device. Nothing leaves your browser.');
+  }
 
   const form = $('#lock-form'), pass = $('#lock-pass'), err = $('#lock-err'), btn = $('#lock-submit');
   pass.value = '';

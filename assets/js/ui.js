@@ -77,23 +77,50 @@ document.addEventListener('DOMContentLoaded', () => {
     ?.addEventListener('click', () => closeTopModal());
 });
 
-/* ── tooltip ────────────────────────────────────────────────── */
+/* ── tooltip ─────────────────────────────────────────────────
+   Built as DOM, never parsed from HTML. Habit names and notes end up in here,
+   and those arrive from imported backups and synced devices as well as from
+   typing — so they are not trustworthy markup. */
 let tipEl = null;
-export function showTip(target, html) {
+
+/**
+ * Standard tooltip body.
+ *   title  bold first line
+ *   lines  strings, or { text, color } to prefix a colour swatch
+ */
+export function tipBody(title, lines = []) {
+  return el('div',
+    title != null ? el('b', String(title)) : null,
+    (Array.isArray(lines) ? lines : [lines])
+      .filter(l => l != null && l !== false)
+      .map(l => (typeof l === 'object'
+        ? el('div.tip-row', el('i', { style: { background: l.color } }), el('span', String(l.text)))
+        : el('div', String(l)))));
+}
+
+function fillTip(content) {
+  clear(tipEl);
+  if (content == null) return;
+  tipEl.appendChild(content.nodeType ? content : document.createTextNode(String(content)));
+}
+
+export function showTip(target, content) {
   hideTip();
-  tipEl = el('div.tip', { html });
+  tipEl = el('div.tip');
+  fillTip(content);
   document.body.appendChild(tipEl);
   const r = target.getBoundingClientRect(), t = tipEl.getBoundingClientRect();
-  let x = r.left + r.width / 2 - t.width / 2;
+  const x = r.left + r.width / 2 - t.width / 2;
   let y = r.top - t.height - 9;
   if (y < 8) y = r.bottom + 9;
   tipEl.style.left = Math.max(8, Math.min(x, innerWidth - t.width - 8)) + 'px';
   tipEl.style.top = y + 'px';
 }
+
 /** Tooltip pinned to a point rather than an element — for canvas hit-testing. */
-export function showTipAt(x, y, html) {
+export function showTipAt(x, y, content) {
   if (!tipEl) { tipEl = el('div.tip'); document.body.appendChild(tipEl); }
-  tipEl.innerHTML = html;
+  fillTip(content);
   const t = tipEl.getBoundingClientRect();
   let top = y - t.height - 14;
   if (top < 8) top = y + 18;
@@ -102,8 +129,9 @@ export function showTipAt(x, y, html) {
 }
 
 export function hideTip() { tipEl?.remove(); tipEl = null; }
-export function attachTip(node, htmlFn) {
-  node.addEventListener('pointerenter', () => showTip(node, typeof htmlFn === 'function' ? htmlFn() : htmlFn));
+export function attachTip(node, content) {
+  node.addEventListener('pointerenter', () =>
+    showTip(node, typeof content === 'function' ? content() : content));
   node.addEventListener('pointerleave', hideTip);
 }
 

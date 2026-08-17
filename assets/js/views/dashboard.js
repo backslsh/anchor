@@ -5,7 +5,7 @@ import { el, clear, humanDays, plural, relDate, fmt12, fmtDate, todayISO, pad,
 import * as S from '../store.js';
 import { quotePool, quoteFor } from '../quotes.js';
 import { mountGem, gemMotionFor } from '../scene.js';
-import { toast, confetti, attachTip, showTipAt, hideTip } from '../ui.js';
+import { toast, confetti, attachTip, tipBody, showTipAt, hideTip } from '../ui.js';
 import { relapseDialog, habitDialog, goalDialog, dayDialog } from '../forms.js';
 
 let gem = null, liveTimer = null, celebrating = null, lastSeenStreak = -1;
@@ -79,11 +79,10 @@ export function render(root, ctx) {
     shatter: brokenToday && lastSeenStreak > 0,
     onHover: (piece, ev, ghost) => {
       if (!piece) return hideTip();
-      showTipAt(ev.clientX, ev.clientY,
-        `<b>${esc(piece.label)}</b>` +
-        (piece.sub ? esc(piece.sub) : '') +
-        (piece.kind === 'main' && ghost
-          ? `<div style="margin-top:4px;opacity:.75">${esc(ghost.sub)}</div>` : ''));
+      showTipAt(ev.clientX, ev.clientY, tipBody(piece.label, [
+        piece.sub,
+        piece.kind === 'main' && ghost ? ghost.sub : null,
+      ]));
     },
     onPick: () => hideTip(),
   });
@@ -133,7 +132,7 @@ export function render(root, ctx) {
           sparkline(S.lastNDays(30, h.id), h.color),
           el('div.hbar-num', el('b', st.days), el('span', 'days')));
         row.onclick = () => ctx.go('habits');
-        attachTip(row, () => `<b>${h.name}</b>${h.note ? h.note : 'Click to open the habits view.'}`);
+        attachTip(row, () => tipBody(h.name, h.note || 'Click to open the habits view.'));
         return row;
       })));
   }
@@ -218,8 +217,6 @@ export function render(root, ctx) {
 
 /* ── pieces ─────────────────────────────────────────────── */
 
-const esc = s => String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-
 /** Caption under the crystal — says what the object is currently showing. */
 function gemHint(streak, longest, tier) {
   if (streak.fresh) return 'your crystal — it grows with every clean day';
@@ -245,26 +242,44 @@ function milestoneLine(d) {
   return 'A year. Whatever you are doing, keep doing it.';
 }
 
+/* Built as real SVG nodes rather than markup strings — nothing dynamic should
+   ever reach innerHTML, even when the values are only numbers today. */
 function sparkline(days, color) {
   const w = 84, h = 30, max = Math.max(1, ...days.map(d => d.n));
   const step = w / (days.length - 1);
-  const pts = days.map((d, i) => `${(i * step).toFixed(1)},${(h - (d.n / max) * (h - 4) - 2).toFixed(1)}`);
-  return el('svg.spark', { viewBox: `0 0 ${w} ${h}`, style: { width: w + 'px', flex: 'none', opacity: .85 },
-    html: `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.6"
-             stroke-linejoin="round" stroke-linecap="round" opacity=".95"/>
-           ${days.map((d, i) => d.n ? `<circle cx="${(i * step).toFixed(1)}" cy="${(h - (d.n / max) * (h - 4) - 2).toFixed(1)}" r="1.9" fill="${color}"/>` : '').join('')}` });
+  const at = (d, i) => [ (i * step).toFixed(1), (h - (d.n / max) * (h - 4) - 2).toFixed(1) ];
+
+  return el('svg.spark', { viewBox: `0 0 ${w} ${h}`, style: { width: w + 'px', flex: 'none', opacity: .85 } },
+    el('polyline', {
+      points: days.map((d, i) => at(d, i).join(',')).join(' '),
+      fill: 'none', stroke: color, 'stroke-width': 1.6,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round', opacity: '.95',
+    }),
+    days.map((d, i) => {
+      if (!d.n) return null;
+      const [cx, cy] = at(d, i);
+      return el('circle', { cx, cy, r: 1.9, fill: color });
+    }));
 }
 
 function ring(pct, left) {
   const R = 34, C = 2 * Math.PI * R;
-  return el('svg', { viewBox: '0 0 84 84', style: { width: '84px', height: '84px', flex: 'none' },
-    html: `<circle cx="42" cy="42" r="${R}" fill="none" stroke="var(--surface-3)" stroke-width="7"/>
-      <circle cx="42" cy="42" r="${R}" fill="none" stroke="url(#rg)" stroke-width="7" stroke-linecap="round"
-        stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, pct))}"
-        transform="rotate(-90 42 42)" style="transition:stroke-dashoffset 1.1s cubic-bezier(.16,1,.3,1)"/>
-      <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="var(--a1)"/><stop offset="100%" stop-color="var(--a2)"/></linearGradient></defs>
-      <text x="42" y="47" text-anchor="middle" style="fill:var(--text);font-size:17px;font-weight:650">${left}</text>` });
+  const gradId = 'ring-grad';
+  return el('svg', { viewBox: '0 0 84 84', style: { width: '84px', height: '84px', flex: 'none' } },
+    el('defs',
+      el('linearGradient', { id: gradId, x1: '0', y1: '0', x2: '1', y2: '1' },
+        el('stop', { offset: '0%', 'stop-color': 'var(--a1)' }),
+        el('stop', { offset: '100%', 'stop-color': 'var(--a2)' }))),
+    el('circle', { cx: 42, cy: 42, r: R, fill: 'none', stroke: 'var(--surface-3)', 'stroke-width': 7 }),
+    el('circle', {
+      cx: 42, cy: 42, r: R, fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': 7,
+      'stroke-linecap': 'round', 'stroke-dasharray': C,
+      'stroke-dashoffset': C * (1 - Math.min(1, pct)),
+      transform: 'rotate(-90 42 42)',
+      style: { transition: 'stroke-dashoffset 1.1s cubic-bezier(.16,1,.3,1)' },
+    }),
+    el('text', { x: 42, y: 47, 'text-anchor': 'middle',
+      style: { fill: 'var(--text)', fontSize: '17px', fontWeight: '650' } }, String(left)));
 }
 
 function quoteCard() {

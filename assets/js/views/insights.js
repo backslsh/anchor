@@ -2,7 +2,7 @@
 
 import { el, clear, MON, DOW, plural, humanDays, fmtDate, rgba, todayISO } from '../util.js';
 import * as S from '../store.js';
-import { attachTip } from '../ui.js';
+import { attachTip, tipBody } from '../ui.js';
 
 export const state = { habitId: null, year: new Date().getFullYear() };
 
@@ -112,7 +112,7 @@ export function render(root, ctx) {
     el('div.mini-heat', { style: { gap: '3px' } }, S.lastNDays(90, hid).map(d => {
       const i = el('i', { style: { height: '34px', borderRadius: '3px',
         background: d.n ? rgba(color, Math.min(1, .35 + d.n * .25)) : 'var(--surface-3)' } });
-      attachTip(i, `<b>${fmtDate(d.date, 'short')}</b>${d.n ? plural(d.n, 'entry', 'entries') : 'clean'}`);
+      attachTip(i, tipBody(fmtDate(d.date, 'short'), d.n ? plural(d.n, 'entry', 'entries') : 'clean'));
       return i;
     })),
     el('p.hint', { style: { marginTop: '10px' } }, 'Oldest on the left. Gaps are the point.')));
@@ -169,7 +169,7 @@ function barChart(data, color, tipFn, dense = false) {
       fill: d.value ? color : 'var(--surface-3)', opacity: d.value ? .9 : .5 });
     rect.style.animationDelay = i * 22 + 'ms';
     svg.appendChild(rect);
-    attachTip(rect, () => `<b>${tipFn ? tipFn(i) : d.label}</b>${d.value}`);
+    attachTip(rect, () => tipBody(tipFn ? tipFn(i) : d.label, String(d.value)));
     if (!dense && d.label) svg.appendChild(svgEl('text', { x: x + bw / 2, y: H - 4, 'text-anchor': 'middle' }, d.label));
   });
   return svg;
@@ -196,7 +196,7 @@ function clockChart(hours, color) {
     const len = 16 + (n / max) * (R - 18);
     const p = wedge(C, C, 15, n ? len : 15.5, a0 + 0.012, a1 - 0.012);
     const path = svgEl('path', { d: p, fill: n ? color : 'var(--surface-3)', opacity: n ? .55 + (n / max) * .45 : .4, class: 'bar' });
-    attachTip(path, `<b>${String(h).padStart(2, '0')}:00 – ${String((h + 1) % 24).padStart(2, '0')}:00</b>${n} logged`);
+    attachTip(path, tipBody(`${String(h).padStart(2, '0')}:00 – ${String((h + 1) % 24).padStart(2, '0')}:00`, `${n} logged`));
     svg.appendChild(path);
   });
   [0, 6, 12, 18].forEach(h => {

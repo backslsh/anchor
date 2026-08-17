@@ -3,7 +3,7 @@
 import { el, clear, iso, todayISO, parseISO, daysInMonth, MONTHS, MON, DOW,
          addDays, plural, fmtDate, rgba } from '../util.js';
 import * as S from '../store.js';
-import { attachTip, showTip, hideTip, toast } from '../ui.js';
+import { attachTip, tipBody, hideTip } from '../ui.js';
 import { relapseDialog, dayDialog } from '../forms.js';
 
 const now = new Date();
@@ -121,13 +121,12 @@ function monthView(root) {
       for (const r of list) if (!seen.includes(r.habitId)) seen.push(r.habitId);
       cell.appendChild(el('div.dmarks', seen.slice(0, 6).map(hid =>
         el('span.dmark', { style: { background: S.habitColor(hid), boxShadow: `0 0 8px -1px ${S.habitColor(hid)}` } }))));
-      attachTip(cell, () =>
-        `<b>${fmtDate(ds)}</b>` + list.map(r =>
-          `<div style="display:flex;gap:6px;align-items:center;margin-top:3px">
-             <i style="width:7px;height:7px;border-radius:2px;background:${S.habitColor(r.habitId)};display:inline-block"></i>
-             ${escape(S.habitName(r.habitId))}${r.time ? ' · ' + r.time : ''}</div>`).join(''));
+      attachTip(cell, () => tipBody(fmtDate(ds), list.map(r => ({
+        color: S.habitColor(r.habitId),
+        text: S.habitName(r.habitId) + (r.time ? ' · ' + r.time : ''),
+      }))));
     } else if (!future && !out) {
-      attachTip(cell, `<b>${fmtDate(ds)}</b>Clean. Click to review, shift-click to log.`);
+      attachTip(cell, tipBody(fmtDate(ds), 'Clean. Click to review, shift-click to log.'));
     }
 
     if (!future) {
@@ -146,7 +145,6 @@ function monthView(root) {
   }
   root.appendChild(grid);
 }
-const escape = s => String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 
 /* ── year ───────────────────────────────────────────────── */
 function yearView(root) {
@@ -184,13 +182,12 @@ function yearView(root) {
         const c = S.habitColor(list[0].habitId);
         cell.style.background = rgba(c, Math.min(1, 0.38 + list.length * 0.22));
         cell.style.boxShadow = `0 0 8px -2px ${c}` + (ds === today ? `, 0 0 0 1.5px var(--accent)` : '');
-        attachTip(cell, () => `<b>${fmtDate(ds)}</b>` +
-          list.map(r => `<div>${escape(S.habitName(r.habitId))}</div>`).join(''));
+        attachTip(cell, () => tipBody(fmtDate(ds), list.map(r => S.habitName(r.habitId))));
       } else if (ds > today) {
         cell.style.background = 'var(--surface-2)';
         cell.style.opacity = '.4';
       } else {
-        attachTip(cell, `<b>${fmtDate(ds)}</b>Clean`);
+        attachTip(cell, tipBody(fmtDate(ds), 'Clean'));
       }
       cell.onclick = () => { if (ds <= today) dayDialog(ds); };
       cell.style.cursor = ds <= today ? 'pointer' : 'default';
