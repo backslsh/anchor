@@ -3,7 +3,9 @@
 **A relapse tracker that runs on your own machine and keeps your record to
 itself.**
 
-Habits with colours, a master calendar, goals, daily quotes, urge support, and a
+<img width="1705" height="969" alt="image" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" />
+
+Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
 
 No account. No subscription. No servers. No telemetry. No build step, and not a
@@ -12,31 +14,39 @@ single dependency — clone it, run one command, and it works offline forever.
 Most habit and recovery trackers want an email address, a monthly fee, and a
 copy of the most private thing about you on someone else's database. Anchor is
 the other option: it is *private by architecture*, because there is no backend
-that could leak. When you set a passphrase your entries are encrypted on your
+that could leak. When you set a passphrase, your entries are encrypted on your
 own device with AES-256-GCM, and the key never leaves your browser.
 
 It is also honest about its limits — see **[SECURITY.md](SECURITY.md)** for the
 full threat model, in plain language, including the things it cannot protect
 you from.
 
+> [!WARNING]
 > **Not medical software.** Anchor is a self-tracking tool, not treatment. If
 > what you are tracking involves alcohol, drugs, self-harm, or anything where a
-> relapse could be dangerous, please keep a real person in the loop too.
+> relapse could be dangerous, please keep a real person in the loop too and consider ways to get assistance.
+
+> [!NOTE]
+> This software is provided as-is, with NO WARRANTY, to the extent of applicable law.
+> You can find more information and screenshots by scrolling down. ↓↓
 
 ---
 
 ## Quick start
-
+For Mac users, open 'Terminal' and enter:
 ```bash
 git clone https://github.com/YOUR-USERNAME/anchor.git
 cd anchor
 node serve.js --open
 ```
 
-Windows users can just double-click **`start.bat`**.
+### Windows users can just double-click **`start.bat`**.
 
-Node 18+ is the only requirement. There is nothing to install — no `npm
+> [!NOTE]
+> Node 18+ is the only requirement. There is nothing to install — no `npm
 install`, no bundler, no framework.
+> [Install Node 18+](https://nodejs.org/en/download/current)
+> _Be sure to select the correct operating system you are using, eg., Windows_
 
 On first run you get a blank slate: no habits, no entries, no passphrase. Set
 one in **Settings → Privacy & lock** and it encrypts everything from then on.
@@ -134,6 +144,8 @@ What you *can* do is **amend** it: change the habit it belongs to, the date, the
 time, the intensity, the triggers, the notes. Every amendment is timestamped and
 appended to that entry's history, which is shown at the bottom of the amend
 dialog.
+<img width="547" height="859" alt="image" src="https://github.com/user-attachments/assets/d543c07c-5021-4f2a-80ad-1d87862e5872" />
+
 
 The single escape hatch is **Settings → Erase everything**, which wipes the
 entire vault at once and requires typing `ERASE`. That is a decision, not an
@@ -145,8 +157,12 @@ edit.
 
 Anchor's lock screen is **not** a JavaScript `if (password === …)` check that a
 determined person could step around in devtools.
+<img width="1919" height="959" alt="image" src="https://github.com/user-attachments/assets/87fa3345-9e2f-42e0-bc8d-9eed3ab6e5ca" />
+
 
 When you set a passphrase in **Settings → Privacy & lock**:
+<img width="1696" height="953" alt="image" src="https://github.com/user-attachments/assets/ed815e2c-bfae-4d8a-9ea3-c61d1d5c10cc" />
+
 
 - The passphrase is stretched with **PBKDF2-SHA256, 600,000 iterations**
 - That yields an **AES-256-GCM** key
@@ -179,6 +195,8 @@ better than cleverer — a short memorable sentence beats `Xk7$q`.)*
 
 The object on the dashboard is not decoration. It is your streak:
 
+<img width="436" height="339" alt="image" src="https://github.com/user-attachments/assets/05f23cf6-b991-4312-94a7-7da33a611f38" />
+
 - **Height** is your current clean run measured against your personal best
 - The hollow **ghost** standing over it is that record — the gap between the two
   tips is how many days you still need
@@ -190,54 +208,41 @@ Hover any piece to see what it represents. Drag to spin it.
 
 ---
 
-## Putting it on Netlify
-
-The folder is already a valid Netlify site — `netlify.toml` sets the SPA
-redirect plus a strict CSP, `X-Frame-Options`, and `noindex` headers.
-
-**Set a passphrase before you deploy.** If Anchor detects it is running on a
-non-localhost host without encryption enabled, it will say so on load.
-
-Deploy by dragging the folder onto <https://app.netlify.com/drop>, or:
-
-```bash
-npx netlify-cli deploy --prod --dir .
-```
-
-### Netlify cannot do the live sync
-
-Netlify serves static files only, so there is nowhere for the shared vault to
-live. A Netlify deployment gives each device its own independent history; move
-data across with **Settings → Export / Import**.
-
-For live sync, run `--lan` from your PC instead. The two approaches don't
-combine.
-
----
-
 ## What's in it
 
 **Dashboard** — current clean run, a WebGL solid that gets calmer and brighter
 the longer you go, the day's quote, per-habit streaks with sparklines, active
 goals, next milestone, and an estimate of money and time reclaimed.
+<img width="1705" height="969" alt="image" src="https://github.com/user-attachments/assets/1604be5a-82db-4f89-86cb-dbc19759adf2" />
+
 
 **Calendar** — month grid with a colour bar per habit on each day, plus a year
 view of twelve mini heatmaps and per-year totals. Click the legend to filter.
+<img width="1711" height="969" alt="image" src="https://github.com/user-attachments/assets/938c0fac-632a-459d-9cdd-a79e908424ed" />
+
 
 **Habits** — one colour per behaviour, an optional written reason you will read
 back on a bad night, a 30-day heat strip, and optional cost/minutes per slip.
+<img width="1706" height="966" alt="image" src="https://github.com/user-attachments/assets/f01471ab-6200-4c21-89bb-b928ec64f9e0" />
+
 
 **Goals** — three kinds:
 - *Clean run* — reach N days; completes itself
 - *Budget* — at most N slips per week/month/year
 - *Milestone* — free-form, with an optional deadline
+<img width="1699" height="955" alt="image" src="https://github.com/user-attachments/assets/383f1b90-ed98-4413-b34c-d259b78089e2" />
+
 
 **Insights** — by month, by weekday, by hour on a 24-hour clock, split by habit,
 every clean run in order, your named triggers weighted by frequency, and
 intensity distribution.
+<img width="1705" height="961" alt="image" src="https://github.com/user-attachments/assets/c8e8d6b5-1f7c-4349-b692-090923d9def7" />
+
 
 **Urge support** — a 4-7-8 breathing overlay that also shows your current run,
 what is riding on it, and the notes you wrote to yourself after previous slips.
+<img width="1705" height="960" alt="image" src="https://github.com/user-attachments/assets/feb6c7be-87df-420f-bfac-2d0eee974138" />
+
 
 ---
 
