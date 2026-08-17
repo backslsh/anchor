@@ -32,6 +32,21 @@ you from.
 > This software is provided as-is, with NO WARRANTY, to the extent of applicable law.
 > You can find more information and screenshots by scrolling down. ↓↓
 
+## Table of Contents:
+- [Quick Start](https://github.com/backslsh/anchor/#quick-start)
+- [Server Options](https://github.com/backslsh/anchor/#server-options)
+- [Using Anchor on a mobile device](https://github.com/backslsh/anchor/#using-it-on-your-phone)
+- [Permanence Rule](https://github.com/backslsh/anchor/#the-permanence-rule)
+- [Password Protection](https://github.com/backslsh/anchor/#password-protection)
+- [Streak Pet](https://github.com/backslsh/anchor/#dashboard-crystal)
+- [What's Included](https://github.com/backslsh/anchor/#whats-in-it)
+- [Things to Find](https://github.com/backslsh/anchor/#things-to-find)
+- [Files](https://github.com/backslsh/anchor/#files)
+- [Contributing](https://github.com/backslsh/anchor/#contributing)
+- [License](https://github.com/backslsh/anchor/#license)
+- [IMPORTANT NOTE](https://github.com/backslsh/anchor/#a-note)
+- [Full Feature List](https://github.com/backslsh/anchor/blob/main/FEATURES.md)
+
 ---
 
 ## Quick start
