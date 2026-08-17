@@ -3,7 +3,9 @@
 **A relapse tracker that runs on your own machine and keeps your record to
 itself.**
 
-Habits with colours, a master calendar, goals, daily quotes, urge support, and a
+<img width="1705" height="969" alt="image" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" />
+
+Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
 
 No account. No subscription. No servers. No telemetry. No build step, and not a
@@ -12,63 +14,93 @@ single dependency — clone it, run one command, and it works offline forever.
 Most habit and recovery trackers want an email address, a monthly fee, and a
 copy of the most private thing about you on someone else's database. Anchor is
 the other option: it is *private by architecture*, because there is no backend
-that could leak. When you set a passphrase your entries are encrypted on your
+that could leak. When you set a passphrase, your entries are encrypted on your
 own device with AES-256-GCM, and the key never leaves your browser.
 
 It is also honest about its limits — see **[SECURITY.md](SECURITY.md)** for the
 full threat model, in plain language, including the things it cannot protect
 you from.
+> [!NOTE]
+> This software has only been tested thoroughly on a Windows device. It is not guaranteed to function properly or at all on non-Windows operating systems. If you are using Anchor on Linux, macOS, or another OS, please let us know if it functions!
 
+> [!IMPORTANT]
 > **Not medical software.** Anchor is a self-tracking tool, not treatment. If
 > what you are tracking involves alcohol, drugs, self-harm, or anything where a
-> relapse could be dangerous, please keep a real person in the loop too.
+> relapse could be dangerous, please keep a real person in the loop too and consider ways to get assistance.
+
+> [!NOTE]
+> This software is provided as-is, with NO WARRANTY, to the extent of applicable law.
+> You can find more information and screenshots by scrolling down. ↓↓
+
+## Table of Contents:
+- [Download](https://github.com/backslsh/anchor/#download-nothing-to-install)
+- [Quick Start](https://github.com/backslsh/anchor/#quick-start)
+- [Server Options](https://github.com/backslsh/anchor/#server-options)
+- [Using Anchor on a mobile device](https://github.com/backslsh/anchor/#using-it-on-your-phone)
+- [Permanence Rule](https://github.com/backslsh/anchor/#the-permanence-rule)
+- [Password Protection](https://github.com/backslsh/anchor/#password-protection)
+- [Streak Pet](https://github.com/backslsh/anchor/#dashboard-crystal)
+- [What's Included](https://github.com/backslsh/anchor/#whats-in-it)
+- [Things to Find](https://github.com/backslsh/anchor/#things-to-find)
+- [Files](https://github.com/backslsh/anchor/#files)
+- [Building the executables](https://github.com/backslsh/anchor/#building-the-executables)
+- [Contributing](https://github.com/backslsh/anchor/#contributing)
+- [License](https://github.com/backslsh/anchor/#license)
+- [IMPORTANT NOTE](https://github.com/backslsh/anchor/#a-note)
+- [Full Feature List](https://github.com/backslsh/anchor/blob/main/FEATURES.md)
 
 ---
 
-## Get it
-
-### Download (no install, nothing to set up)
+## Download (nothing to install)
 
 Grab the file for your system from the
-[latest release](https://github.com/YOUR-USERNAME/anchor/releases/latest):
+[latest release](https://github.com/backslsh/anchor/releases/latest):
 
-| | |
+| System | File |
 | --- | --- |
 | Windows | `Anchor-windows.exe` |
 | macOS | `Anchor-macos` |
 | Linux | `Anchor-linux` |
 
-Double-click it. Anchor opens in your browser and that's it.
+Double-click it and Anchor opens in your browser.
 
-**There is nothing to install.** This is not an installer — it is the whole
-application in one file. It copies nothing into Program Files, writes nothing to
-the registry, and needs no admin rights. It runs while the window is open and
-stops when you close it, so keep the file somewhere you can get at easily and
-double-click it whenever you want Anchor.
+> [!NOTE]
+> **This is not an installer.** It is the whole application in one file. It
+> copies nothing into Program Files, writes nothing to the registry, and needs
+> no admin rights. Anchor runs while the window is open and stops when you close
+> it, so keep the file somewhere handy and double-click it whenever you want it.
 
 Your data lives in a folder called `.anchor` in your home directory, *not* next
 to the file — so moving the app, renaming it, or downloading a newer version
 never loses your history. Pass `--portable` if you would rather keep everything
 together on a USB stick.
 
-macOS will refuse an unsigned download the first time: **right-click → Open**,
-then confirm. (Signing costs $99/year, which rather defeats the point of a free
-tool.) On Linux you may need `chmod +x Anchor-linux` first.
+> [!IMPORTANT]
+> The downloads are not code-signed, because certificates cost money a free tool
+> does not have. Windows SmartScreen will say "Windows protected your PC" —
+> click **More info → Run anyway**. macOS will refuse the first launch —
+> **right-click → Open**, then confirm. On Linux, `chmod +x Anchor-linux` first.
 
-### Or run it from source
+---
 
+## Quick start
+For Mac users, open 'Terminal' and enter:
 ```bash
 git clone https://github.com/YOUR-USERNAME/anchor.git
 cd anchor
 node serve.js --open
 ```
 
-Windows users can just double-click **`start.bat`**. Node 18+ is the only
-requirement — no `npm install`, no bundler, no framework.
+### Windows users can just double-click **`start.bat`**.
 
-Either way, first run gives you a blank slate: no habits, no entries, no
-passphrase. Set one in **Settings → Privacy & lock** and it encrypts everything
-from then on.
+> [!TIP]
+> Node 18+ is the only requirement. There is nothing to install — no `npm
+install`, no bundler, no framework.
+> [Install Node 18+](https://nodejs.org/en/download/current)
+> _Be sure to select the correct operating system you are using, eg., Windows_
+
+On first run you get a blank slate: no habits, no entries, no passphrase. Set
+one in **Settings → Privacy & lock** and it encrypts everything from then on.
 
 ---
 
@@ -82,6 +114,7 @@ else on your network can reach it.
 | `--lan` | HTTPS + sync, reachable from your phone (see below) |
 | `--port 5000` | Use a different port |
 | `--open` | Open your browser automatically |
+| `--portable` | Keep data beside the executable instead of in your home folder |
 | `--no-sync` | Disable the on-disk sync store (it is on by default) |
 
 > **Why a server at all?** The app uses ES modules, which browsers refuse to
@@ -107,11 +140,8 @@ http://localhost:4321/?demo
 Or from the browser console: `anchor.demo()`
 
 It only fills an **empty** vault. If you already have a habit or a single entry
-it refuses and says so, so it can never overwrite a real record. To wipe the
-sample data afterwards, use **Settings → Erase everything**.
-
-This is also what the screenshots above are taken from, so what you see is what
-you get.
+it refuses, so it can never overwrite a real record. Clear it afterwards with
+**Settings → Erase everything**.
 
 ---
 
@@ -164,9 +194,9 @@ entry, because the key never leaves the browser.
 **Merges never drop a relapse.** The merged set is the union by id — the same
 promise the rest of the app makes. If the same entry exists on both devices, the
 copy with more amendments wins. Log on your phone and your PC on the same
-afternoon and you end up with both.
+afternoon, and you end up with both.
 
-Turn it off per-device in **Settings → Sync with this PC**.
+Turn it off per device in **Settings → Sync with this PC**.
 
 > `.anchor-data/` holds your encrypted vault and your TLS private key. Don't
 > commit it or copy it anywhere public.
@@ -183,6 +213,8 @@ What you *can* do is **amend** it: change the habit it belongs to, the date, the
 time, the intensity, the triggers, the notes. Every amendment is timestamped and
 appended to that entry's history, which is shown at the bottom of the amend
 dialog.
+<img width="547" height="859" alt="image" src="https://github.com/user-attachments/assets/d543c07c-5021-4f2a-80ad-1d87862e5872" />
+
 
 The single escape hatch is **Settings → Erase everything**, which wipes the
 entire vault at once and requires typing `ERASE`. That is a decision, not an
@@ -194,8 +226,12 @@ edit.
 
 Anchor's lock screen is **not** a JavaScript `if (password === …)` check that a
 determined person could step around in devtools.
+<img width="1919" height="959" alt="image" src="https://github.com/user-attachments/assets/87fa3345-9e2f-42e0-bc8d-9eed3ab6e5ca" />
+
 
 When you set a passphrase in **Settings → Privacy & lock**:
+<img width="1696" height="953" alt="image" src="https://github.com/user-attachments/assets/ed815e2c-bfae-4d8a-9ea3-c61d1d5c10cc" />
+
 
 - The passphrase is stretched with **PBKDF2-SHA256, 600,000 iterations**
 - That yields an **AES-256-GCM** key
@@ -203,7 +239,7 @@ When you set a passphrase in **Settings → Privacy & lock**:
 - The passphrase itself is never stored — only a random salt and a small
   verifier blob, so a wrong passphrase simply fails to decrypt
 
-Without the passphrase the stored data is ciphertext. Not hidden — unreadable.
+Without the passphrase, the stored data is ciphertext. Not hidden — unreadable.
 
 There is **no recovery**. If you forget it, the data is gone. That is the
 tradeoff that makes it real. Export a backup somewhere safe.
@@ -228,6 +264,8 @@ better than cleverer — a short memorable sentence beats `Xk7$q`.)*
 
 The object on the dashboard is not decoration. It is your streak:
 
+<img width="436" height="339" alt="image" src="https://github.com/user-attachments/assets/05f23cf6-b991-4312-94a7-7da33a611f38" />
+
 - **Height** is your current clean run measured against your personal best
 - The hollow **ghost** standing over it is that record — the gap between the two
   tips is how many days you still need
@@ -235,32 +273,7 @@ The object on the dashboard is not decoration. It is your streak:
   (1, 3, 7, 10, 14, 21, 30 …)
 - Log a relapse and it **shatters**, then regrows from a chip
 
-Hover any piece to see what it represents. Drag to spin it.
-
----
-
-## Putting it on Netlify
-
-The folder is already a valid Netlify site — `netlify.toml` sets the SPA
-redirect plus a strict CSP, `X-Frame-Options`, and `noindex` headers.
-
-**Set a passphrase before you deploy.** If Anchor detects it is running on a
-non-localhost host without encryption enabled, it will say so on load.
-
-Deploy by dragging the folder onto <https://app.netlify.com/drop>, or:
-
-```bash
-npx netlify-cli deploy --prod --dir .
-```
-
-### Netlify cannot do the live sync
-
-Netlify serves static files only, so there is nowhere for the shared vault to
-live. A Netlify deployment gives each device its own independent history; move
-data across with **Settings → Export / Import**.
-
-For live sync, run `--lan` from your PC instead. The two approaches don't
-combine.
+Hover over any piece to see what it represents. Drag to spin it.
 
 ---
 
@@ -269,24 +282,36 @@ combine.
 **Dashboard** — current clean run, a WebGL solid that gets calmer and brighter
 the longer you go, the day's quote, per-habit streaks with sparklines, active
 goals, next milestone, and an estimate of money and time reclaimed.
+<img width="1705" height="969" alt="image" src="https://github.com/user-attachments/assets/1604be5a-82db-4f89-86cb-dbc19759adf2" />
 
-**Calendar** — month grid with a colour bar per habit on each day, plus a year
+
+**Calendar** — month grid with a color bar per habit on each day, plus a year
 view of twelve mini heatmaps and per-year totals. Click the legend to filter.
+<img width="1711" height="969" alt="image" src="https://github.com/user-attachments/assets/938c0fac-632a-459d-9cdd-a79e908424ed" />
 
-**Habits** — one colour per behaviour, an optional written reason you will read
+
+**Habits** — one color per behavior, an optional written reason you will read
 back on a bad night, a 30-day heat strip, and optional cost/minutes per slip.
+<img width="1706" height="966" alt="image" src="https://github.com/user-attachments/assets/f01471ab-6200-4c21-89bb-b928ec64f9e0" />
+
 
 **Goals** — three kinds:
 - *Clean run* — reach N days; completes itself
 - *Budget* — at most N slips per week/month/year
 - *Milestone* — free-form, with an optional deadline
+<img width="1699" height="955" alt="image" src="https://github.com/user-attachments/assets/383f1b90-ed98-4413-b34c-d259b78089e2" />
+
 
 **Insights** — by month, by weekday, by hour on a 24-hour clock, split by habit,
 every clean run in order, your named triggers weighted by frequency, and
 intensity distribution.
+<img width="1705" height="961" alt="image" src="https://github.com/user-attachments/assets/c8e8d6b5-1f7c-4349-b692-090923d9def7" />
+
 
 **Urge support** — a 4-7-8 breathing overlay that also shows your current run,
 what is riding on it, and the notes you wrote to yourself after previous slips.
+<img width="1705" height="960" alt="image" src="https://github.com/user-attachments/assets/feb6c7be-87df-420f-bfac-2d0eee974138" />
+
 
 ---
 
@@ -350,22 +375,23 @@ node build.js
 Produces `dist/Anchor-<platform>` using Node's built-in Single Executable
 Application support: `serve.js` and every web asset are embedded into a copy of
 the Node binary. The result is ~80 MB, because it contains a whole JavaScript
-runtime, and depends on nothing.
+runtime, and depends on nothing at all.
 
 The only build-time dependency is `postject`, fetched on demand via `npx`, which
 performs the injection. Nothing from it ends up in the output.
 
-SEA cannot cross-compile — a Windows `.exe` has to be built on Windows.
-`.github/workflows/release.yml` builds all three platforms on a tag push, smoke
-tests each one from an empty directory, and attaches them to a draft release:
-
-```bash
-git tag v1.0.0 && git push origin v1.0.0
-```
+Single Executable Applications cannot cross-compile — a Windows `.exe` has to be
+built on Windows. `.github/workflows/release.yml` builds all three platforms on
+a tag push, smoke tests each from an empty directory, and attaches them to a
+draft release.
 
 ---
 
 ## Contributing
+
+> [!WARNING]
+> Only install and run Anchor from repositories you trust; @backslsh is the original author.
+> Other dependencies may have maliciously modified code; use at your own risk.
 
 Issues and pull requests are welcome. A few ground rules that keep the project
 what it is:

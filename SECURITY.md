@@ -89,23 +89,6 @@ serves HTTPS.
 
 ---
 
-## If you are writing about this project
-
-Accurate things to say:
-
-- No account, no subscription, no servers, no telemetry
-- Entries are encrypted on your own device with a passphrase only you know
-- Private by architecture — there is no backend that *could* leak
-- Free and open source; you can read every line
-
-Please do **not** say "100% secure", "unhackable", "military-grade", or
-"impossible to access." Those are false for all software including this, and
-people making decisions about deeply personal data deserve better than
-marketing. "Private by design, and here is exactly what that means" is a
-stronger claim anyway, because it is true.
-
----
-
 ## Reporting a vulnerability
 
 Open an issue for anything non-sensitive. For something that could put users at
