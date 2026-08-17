@@ -230,6 +230,4 @@ Windows users can double-click `start.bat` or `start-phone.bat`.
   over HTTPS or localhost
 - Server hardening: path-traversal protection, the data directory is never
   servable, `nosniff` / `no-referrer` / `noindex` headers, SPA fallback
-- `netlify.toml` included for static deployment, with a strict CSP
-  (note: Netlify cannot host the live sync, only the app)
 - MIT licensed

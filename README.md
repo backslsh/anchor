@@ -350,7 +350,6 @@ all. **Settings → Show the tips again** resets that.
 
 ```
 index.html            markup + overlay containers
-netlify.toml          SPA redirect, CSP, security headers
 serve.js              zero-dep server: static files + encrypted sync store
 start.bat             Windows launcher (local only)
 start-phone.bat       Windows launcher (HTTPS + sync, for phone access)
