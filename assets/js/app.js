@@ -54,6 +54,16 @@ async function boot() {
   } catch {
     S.hydrate(null);
   }
+
+  // ?demo fills an *empty* vault with sample data. It cannot touch a real one:
+  // seedDemo() bails if any habit or entry already exists.
+  if (new URLSearchParams(location.search).has('demo')) {
+    try {
+      const { seedDemo } = await import('./demo.js');
+      seedDemo();
+    } catch (e) { console.warn('[anchor] demo seed failed', e); }
+  }
+
   startApp();
 }
 
@@ -508,6 +518,13 @@ window.anchor = {
   export: () => JSON.stringify(S.S, null, 2),
   version: '1.0.0',
   note: 'Relapses are append-and-amend only. Even from here.',
+  /** Load the sample vault — for screenshots and for trying the app out. */
+  async demo(opts) {
+    const { seedDemo } = await import('./demo.js');
+    const ok = seedDemo(opts);
+    if (ok) rerender();
+    return ok;
+  },
 };
 
 /* Boot last: everything above must be initialised before the first render,

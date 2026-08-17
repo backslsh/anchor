@@ -66,6 +66,26 @@ before a passphrase exists, because the store refuses unencrypted data.
 
 ---
 
+## Trying it without committing to anything
+
+Load a sample vault — fourteen months of invented history with a real
+improvement arc, a 41-day run in progress against a 62-day record:
+
+```
+http://localhost:4321/?demo
+```
+
+Or from the browser console: `anchor.demo()`
+
+It only fills an **empty** vault. If you already have a habit or a single entry
+it refuses and says so, so it can never overwrite a real record. To wipe the
+sample data afterwards, use **Settings → Erase everything**.
+
+This is also what the screenshots above are taken from, so what you see is what
+you get.
+
+---
+
 ## Using it on your phone
 
 ```bash
