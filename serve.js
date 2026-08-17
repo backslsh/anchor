@@ -45,11 +45,23 @@ const SYNC    = !has('no-sync');
 const OPEN    = has('open') || (PACKAGED && !has('no-open'));
 const ROOT    = PACKAGED ? path.dirname(process.execPath) : __dirname;
 
-/** Keep the vault beside the executable so the app stays portable, but fall
-    back to the home directory when that location is read-only (Program Files,
-    a DMG, a locked-down share). */
+/**
+ * Where the vault lives.
+ *
+ * A packaged build stores it in the home directory, NOT beside the executable.
+ * The executable is a download: people move it, browsers rename it to
+ * "Anchor (1).exe" in another folder, and a new version arrives as a separate
+ * file. Tying years of history to the location of a downloaded binary is a
+ * silent data-loss trap. `--portable` opts into beside-the-exe for USB sticks.
+ *
+ * Running from a clone keeps it in the project folder, which is what a
+ * developer expects and what .gitignore already covers.
+ */
 function resolveDataDir() {
-  for (const dir of [path.join(ROOT, '.anchor-data'), path.join(os.homedir(), '.anchor')]) {
+  const beside = path.join(ROOT, '.anchor-data');
+  const home = path.join(os.homedir(), '.anchor');
+  const order = PACKAGED && !has('portable') ? [home, beside] : [beside, home];
+  for (const dir of order) {
     try {
       fs.mkdirSync(dir, { recursive: true });
       fs.accessSync(dir, fs.constants.W_OK);

@@ -38,10 +38,18 @@ Grab the file for your system from the
 | macOS | `Anchor-macos` |
 | Linux | `Anchor-linux` |
 
-Double-click it. Anchor opens in your browser and that's it — no Node, no npm,
-no installer, no admin rights. It is a single self-contained file, and it puts
-your data in a `.anchor-data` folder next to itself, so you can keep the whole
-thing on a USB stick if you like.
+Double-click it. Anchor opens in your browser and that's it.
+
+**There is nothing to install.** This is not an installer — it is the whole
+application in one file. It copies nothing into Program Files, writes nothing to
+the registry, and needs no admin rights. It runs while the window is open and
+stops when you close it, so keep the file somewhere you can get at easily and
+double-click it whenever you want Anchor.
+
+Your data lives in a folder called `.anchor` in your home directory, *not* next
+to the file — so moving the app, renaming it, or downloading a newer version
+never loses your history. Pass `--portable` if you would rather keep everything
+together on a USB stick.
 
 macOS will refuse an unsigned download the first time: **right-click → Open**,
 then confirm. (Signing costs $99/year, which rather defeats the point of a free
