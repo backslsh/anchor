@@ -41,26 +41,30 @@ const USE_TLS = LAN || has('https');
 // gives the vault a home on disk that survives the browser clearing storage.
 // The store only ever holds ciphertext, so this costs nothing in privacy.
 const SYNC    = !has('no-sync');
-// A packaged app has no terminal to read the URL from, so open the browser.
-const OPEN    = has('open') || (PACKAGED && !has('no-open'));
 const ROOT    = PACKAGED ? path.dirname(process.execPath) : __dirname;
 
-/**
- * Where the vault lives.
- *
- * A packaged build stores it in the home directory, NOT beside the executable.
- * The executable is a download: people move it, browsers rename it to
- * "Anchor (1).exe" in another folder, and a new version arrives as a separate
- * file. Tying years of history to the location of a downloaded binary is a
- * silent data-loss trap. `--portable` opts into beside-the-exe for USB sticks.
- *
- * Running from a clone keeps it in the project folder, which is what a
- * developer expects and what .gitignore already covers.
- */
 /* An npm install lives in node_modules, and `npx` runs from a throwaway cache
    that gets cleaned. Writing the vault next to the code there would lose it on
    the next update — the same trap as storing it beside a downloaded exe. */
 const INSTALLED = /[\\/](node_modules|_npx)[\\/]/.test(ROOT + path.sep);
+
+// Neither a packaged app nor `npx anchor-tracker` leaves a terminal the user is
+// watching, so open the browser for them. Must be evaluated after INSTALLED.
+const OPEN    = has('open') || ((PACKAGED || INSTALLED) && !has('no-open'));
+
+/**
+ * Where the vault lives.
+ *
+ * A packaged or installed build stores it in the home directory, NOT beside the
+ * code. The executable is a download: people move it, browsers rename it to
+ * "Anchor (1).exe" in another folder, and a new version arrives as a separate
+ * file — and an npx cache is deleted outright. Tying years of history to either
+ * location is a silent data-loss trap. `--portable` opts into beside-the-code
+ * for USB sticks.
+ *
+ * Running from a clone keeps it in the project folder, which is what a
+ * developer expects and what .gitignore already covers.
+ */
 
 function resolveDataDir() {
   const beside = path.join(ROOT, '.anchor-data');
