@@ -34,6 +34,7 @@ you from.
 
 ## Table of Contents:
 - [Download](https://github.com/backslsh/anchor/#download-nothing-to-install)
+- [Run with npx](https://github.com/backslsh/anchor/#run-it-with-one-command)
 - [Quick Start](https://github.com/backslsh/anchor/#quick-start)
 - [Server Options](https://github.com/backslsh/anchor/#server-options)
 - [Using Anchor on a mobile device](https://github.com/backslsh/anchor/#using-it-on-your-phone)
@@ -80,6 +81,27 @@ together on a USB stick.
 > does not have. Windows SmartScreen will say "Windows protected your PC" —
 > click **More info → Run anyway**. macOS will refuse the first launch —
 > **right-click → Open**, then confirm. On Linux, `chmod +x Anchor-linux` first.
+
+---
+
+## Run it with one command
+
+If you already have Node:
+
+```bash
+npx anchor-tracker
+```
+
+Nothing is installed permanently — `npx` fetches it, runs it, and Anchor opens
+in your browser. Your data goes to a `.anchor` folder in your home directory, so
+it survives updates and cache clears.
+
+To keep it around:
+
+```bash
+npm install -g anchor-tracker
+anchor-tracker
+```
 
 ---
 

@@ -28,3 +28,6 @@ npm-debug.log*
 
 # Built executables
 dist/
+
+# npm pack output
+*.tgz

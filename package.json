@@ -1,0 +1,33 @@
+{
+  "name": "anchor-tracker",
+  "version": "1.1.0",
+  "description": "A private, local-first relapse tracker. No account, no servers, no telemetry, zero dependencies. Encrypts your record with a passphrase only you hold.",
+  "keywords": [
+    "relapse", "tracker", "habit", "habit-tracker", "sobriety", "recovery",
+    "streak", "privacy", "local-first", "offline", "self-hosted", "encrypted",
+    "no-dependencies", "cli"
+  ],
+  "homepage": "https://github.com/backslsh/anchor#readme",
+  "bugs": { "url": "https://github.com/backslsh/anchor/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/backslsh/anchor.git" },
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": { "anchor-tracker": "serve.js" },
+  "main": "serve.js",
+  "engines": { "node": ">=18" },
+  "files": [
+    "serve.js",
+    "index.html",
+    "assets/",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node serve.js --open",
+    "lan": "node serve.js --lan",
+    "build": "node build.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

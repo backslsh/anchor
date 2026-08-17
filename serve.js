@@ -57,10 +57,16 @@ const ROOT    = PACKAGED ? path.dirname(process.execPath) : __dirname;
  * Running from a clone keeps it in the project folder, which is what a
  * developer expects and what .gitignore already covers.
  */
+/* An npm install lives in node_modules, and `npx` runs from a throwaway cache
+   that gets cleaned. Writing the vault next to the code there would lose it on
+   the next update — the same trap as storing it beside a downloaded exe. */
+const INSTALLED = /[\\/](node_modules|_npx)[\\/]/.test(ROOT + path.sep);
+
 function resolveDataDir() {
   const beside = path.join(ROOT, '.anchor-data');
   const home = path.join(os.homedir(), '.anchor');
-  const order = PACKAGED && !has('portable') ? [home, beside] : [beside, home];
+  const portable = has('portable');
+  const order = (PACKAGED || INSTALLED) && !portable ? [home, beside] : [beside, home];
   for (const dir of order) {
     try {
       fs.mkdirSync(dir, { recursive: true });
