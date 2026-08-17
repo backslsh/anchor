@@ -20,6 +20,8 @@ own device with AES-256-GCM, and the key never leaves your browser.
 It is also honest about its limits — see **[SECURITY.md](SECURITY.md)** for the
 full threat model, in plain language, including the things it cannot protect
 you from.
+> [!NOTE]
+> This software has only been tested thoroughly on a Windows device. It is not guaranteed to function properly or at all on non-Windows operating systems. If you are using Anchor on Linux, macOS, or another OS, please let us know if it functions!
 
 > [!WARNING]
 > **Not medical software.** Anchor is a self-tracking tool, not treatment. If
