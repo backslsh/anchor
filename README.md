@@ -2,8 +2,23 @@
 
 **A relapse tracker that runs on your own machine and keeps your record to
 itself.**
+<div align="center">
 
-<img width="1705" height="969" alt="image" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" />
+<img width="900" alt="Anchor dashboard" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" />
+
+<p>
+<a href="https://www.npmjs.com/package/anchor-tracker"><img alt="npm" src="https://img.shields.io/npm/v/anchor-tracker?color=7c5cff&label=npm"></a>
+<a href="https://github.com/backslsh/anchor/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/backslsh/anchor?color=00d6c2"></a>
+<!-- <img alt="zero dependencies" src="https://img.shields.io/badge/dependencies-0-3ddc97"> -->
+<a href="https://socket.dev/npm/package/anchor-tracker"><img alt="security score" src="https://badge.socket.dev/npm/package/anchor-tracker/1.1.1"></a>
+<img alt="telemetry: none" src="https://img.shields.io/badge/telemetry-none-3ddc97">
+<!-- <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/github/license/backslsh/anchor?color=9aa6bd"></a> -->
+<img alt="." src="https://github.com/backslsh/anchor/actions/workflows/release.yml/badge.svg">
+<img src="https://img.shields.io/npm/unpacked-size/anchor-tracker">
+</p>
+
+</div>
+
 
 Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
