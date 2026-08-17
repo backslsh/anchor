@@ -23,7 +23,7 @@ you from.
 > [!NOTE]
 > This software has only been tested thoroughly on a Windows device. It is not guaranteed to function properly or at all on non-Windows operating systems. If you are using Anchor on Linux, macOS, or another OS, please let us know if it functions!
 
-> [!WARNING]
+> [!IMPORTANT]
 > **Not medical software.** Anchor is a self-tracking tool, not treatment. If
 > what you are tracking involves alcohol, drugs, self-harm, or anything where a
 > relapse could be dangerous, please keep a real person in the loop too and consider ways to get assistance.
@@ -59,7 +59,7 @@ node serve.js --open
 
 ### Windows users can just double-click **`start.bat`**.
 
-> [!NOTE]
+> [!TIP]
 > Node 18+ is the only requirement. There is nothing to install — no `npm
 install`, no bundler, no framework.
 > [Install Node 18+](https://nodejs.org/en/download/current)
@@ -142,9 +142,9 @@ entry, because the key never leaves the browser.
 **Merges never drop a relapse.** The merged set is the union by id — the same
 promise the rest of the app makes. If the same entry exists on both devices, the
 copy with more amendments wins. Log on your phone and your PC on the same
-afternoon and you end up with both.
+afternoon, and you end up with both.
 
-Turn it off per-device in **Settings → Sync with this PC**.
+Turn it off per device in **Settings → Sync with this PC**.
 
 > `.anchor-data/` holds your encrypted vault and your TLS private key. Don't
 > commit it or copy it anywhere public.
@@ -187,7 +187,7 @@ When you set a passphrase in **Settings → Privacy & lock**:
 - The passphrase itself is never stored — only a random salt and a small
   verifier blob, so a wrong passphrase simply fails to decrypt
 
-Without the passphrase the stored data is ciphertext. Not hidden — unreadable.
+Without the passphrase, the stored data is ciphertext. Not hidden — unreadable.
 
 There is **no recovery**. If you forget it, the data is gone. That is the
 tradeoff that makes it real. Export a backup somewhere safe.
@@ -221,7 +221,7 @@ The object on the dashboard is not decoration. It is your streak:
   (1, 3, 7, 10, 14, 21, 30 …)
 - Log a relapse and it **shatters**, then regrows from a chip
 
-Hover any piece to see what it represents. Drag to spin it.
+Hover over any piece to see what it represents. Drag to spin it.
 
 ---
 
@@ -233,12 +233,12 @@ goals, next milestone, and an estimate of money and time reclaimed.
 <img width="1705" height="969" alt="image" src="https://github.com/user-attachments/assets/1604be5a-82db-4f89-86cb-dbc19759adf2" />
 
 
-**Calendar** — month grid with a colour bar per habit on each day, plus a year
+**Calendar** — month grid with a color bar per habit on each day, plus a year
 view of twelve mini heatmaps and per-year totals. Click the legend to filter.
 <img width="1711" height="969" alt="image" src="https://github.com/user-attachments/assets/938c0fac-632a-459d-9cdd-a79e908424ed" />
 
 
-**Habits** — one colour per behaviour, an optional written reason you will read
+**Habits** — one color per behavior, an optional written reason you will read
 back on a bad night, a 30-day heat strip, and optional cost/minutes per slip.
 <img width="1706" height="966" alt="image" src="https://github.com/user-attachments/assets/f01471ab-6200-4c21-89bb-b928ec64f9e0" />
 
@@ -315,6 +315,10 @@ assets/js/
 ---
 
 ## Contributing
+
+> [!WARNING]
+> Only install and run Anchor from repositories you trust; @backslsh is the original author.
+> Other dependencies may have maliciously modified code; use at your own risk.
 
 Issues and pull requests are welcome. A few ground rules that keep the project
 what it is:
