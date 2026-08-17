@@ -16,7 +16,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
-const { execFileSync, execFile } = require('child_process');
+const { execFile } = require('child_process');   // only used to open the browser
 
 /* ── packaged or not ─────────────────────────────────────────
    Built with `node build.js`, the whole app is embedded in a single
@@ -85,34 +85,122 @@ function lanAddresses() {
   return out;
 }
 
+/* ── DER encoding, just enough for one X.509 certificate ──────
+   Node can make an RSA keypair and sign with it, but has no certificate
+   builder. Shelling out to OpenSSL is not an option: it is absent from a
+   default Windows PATH and from every machine running the packaged download.
+   So the certificate is assembled by hand here — no tools, no dependencies. */
+
+function derLen(n) {
+  if (n < 0x80) return Buffer.from([n]);
+  const b = [];
+  for (let v = n; v > 0; v >>>= 8) b.unshift(v & 0xff);
+  return Buffer.from([0x80 | b.length, ...b]);
+}
+const tlv = (tag, parts) => {
+  const body = Buffer.isBuffer(parts) ? parts : Buffer.concat(parts.filter(Boolean));
+  return Buffer.concat([Buffer.from([tag]), derLen(body.length), body]);
+};
+const SEQ  = (...p) => tlv(0x30, p.flat());
+const SET  = (...p) => tlv(0x31, p.flat());
+const BITS = buf => tlv(0x03, Buffer.concat([Buffer.from([0x00]), buf]));  // 0 unused bits
+const OCT  = buf => tlv(0x04, buf);
+const NUL  = () => Buffer.from([0x05, 0x00]);
+const BOOL = v => tlv(0x01, Buffer.from([v ? 0xff : 0x00]));
+const CTX  = (n, p) => tlv(0xa0 | n, [].concat(p));
+
+function INT(buf) {
+  let b = Buffer.from(buf);
+  let i = 0;
+  while (i < b.length - 1 && b[i] === 0 && !(b[i + 1] & 0x80)) i++;   // strip leading zeros
+  b = b.subarray(i);
+  if (b[0] & 0x80) b = Buffer.concat([Buffer.from([0]), b]);          // keep it positive
+  return tlv(0x02, b);
+}
+function OID(dotted) {
+  const a = dotted.split('.').map(Number);
+  const out = [a[0] * 40 + a[1]];
+  for (const n of a.slice(2)) {
+    const chunk = [n & 0x7f];
+    for (let v = n >>> 7; v > 0; v >>>= 7) chunk.unshift((v & 0x7f) | 0x80);
+    out.push(...chunk);
+  }
+  return tlv(0x06, Buffer.from(out));
+}
+const utcTime = d => {
+  const p = n => String(n).padStart(2, '0');
+  return tlv(0x17, Buffer.from(
+    p(d.getUTCFullYear() % 100) + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) +
+    p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + 'Z', 'ascii'));
+};
+const algSha256Rsa = () => SEQ(OID('1.2.840.113549.1.1.11'), NUL());
+const extension = (oid, critical, value) =>
+  SEQ(OID(oid), critical ? BOOL(true) : null, OCT(value));
+
+const pem = (label, der) =>
+  `-----BEGIN ${label}-----\n${der.toString('base64').match(/.{1,64}/g).join('\n')}\n-----END ${label}-----\n`;
+
+/** A self-signed server certificate covering localhost plus every local IPv4. */
+function makeSelfSignedCert(ips) {
+  const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const spki = publicKey.export({ type: 'spki', format: 'der' });
+
+  const name = SEQ(SET(SEQ(OID('2.5.4.3'), tlv(0x0c, Buffer.from('Anchor Local', 'utf8')))));
+  const now = new Date(Date.now() - 60_000);                 // a minute of clock slack
+  const until = new Date(now.getTime() + 824 * 86400_000);   // iOS rejects anything over 825 days
+
+  // subjectAltName: dNSName is [2] primitive, iPAddress is [7] primitive
+  const dns = host => tlv(0x82, Buffer.from(host, 'ascii'));
+  const ip = addr => tlv(0x87, Buffer.from(addr.split('.').map(Number)));
+  const san = SEQ(dns('localhost'), ip('127.0.0.1'), ...ips.map(ip));
+
+  const tbs = SEQ(
+    CTX(0, INT(Buffer.from([2]))),                           // v3
+    INT(crypto.randomBytes(16)),                             // serial
+    algSha256Rsa(),
+    name,
+    SEQ(utcTime(now), utcTime(until)),
+    name,                                                    // self-signed: issuer === subject
+    spki,
+    CTX(3, SEQ(
+      extension('2.5.29.17', false, san),
+      extension('2.5.29.19', true, SEQ(BOOL(true))),         // basicConstraints CA:TRUE
+      extension('2.5.29.15', true, BITS(Buffer.from([0xa0]))), // digitalSignature|keyEncipherment
+      extension('2.5.29.37', false, SEQ(OID('1.3.6.1.5.5.7.3.1'))), // serverAuth
+    )),
+  );
+
+  const sig = crypto.sign('sha256', tbs, privateKey);
+  const cert = SEQ(tbs, algSha256Rsa(), BITS(sig));
+
+  return {
+    key: privateKey.export({ type: 'pkcs8', format: 'pem' }),
+    cert: pem('CERTIFICATE', cert),
+  };
+}
+
 /* ── self-signed certificate ─────────────────────────────────── */
 function ensureCert() {
   const keyPath = path.join(CERTS, 'key.pem');
   const crtPath = path.join(CERTS, 'cert.pem');
-  const ips = lanAddresses().map(a => a.address);
+  const ips = lanAddresses().map(a => a.address).sort();
   const stamp = path.join(CERTS, 'issued-for.txt');
-  const want = ips.sort().join(',');
+  const want = ips.join(',');
 
   const fresh = fs.existsSync(keyPath) && fs.existsSync(crtPath)
              && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === want;
 
   if (!fresh) {
-    fs.mkdirSync(CERTS, { recursive: true });
-    const san = ['DNS:localhost', 'IP:127.0.0.1', ...ips.map(i => `IP:${i}`)].join(',');
     try {
-      execFileSync('openssl', [
-        'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256',
-        '-keyout', keyPath, '-out', crtPath,
-        '-days', '825',                        // iOS refuses certificates longer than this
-        '-subj', '/CN=Anchor Local',
-        '-addext', `subjectAltName=${san}`,
-        '-addext', 'basicConstraints=critical,CA:TRUE',
-      ], { stdio: 'pipe' });
+      fs.mkdirSync(CERTS, { recursive: true });
+      const { key, cert } = makeSelfSignedCert(ips);
+      fs.writeFileSync(keyPath, key, { mode: 0o600 });
+      fs.writeFileSync(crtPath, cert);
       fs.writeFileSync(stamp, want);
-      console.log('  Generated a self-signed certificate for: ' + (ips.join(', ') || 'localhost'));
+      console.log('  Generated a certificate for: ' + ['localhost', ...ips].join(', '));
     } catch (e) {
-      console.error('\n  Could not generate a certificate with OpenSSL.');
-      console.error('  ' + (e.stderr ? e.stderr.toString().trim().split('\n').pop() : e.message));
+      console.error('\n  Could not create the HTTPS certificate.');
+      console.error('  ' + e.message);
       console.error('\n  Without HTTPS the browser withholds crypto.subtle, so the');
       console.error('  passphrase and encryption cannot work off localhost.\n');
       process.exit(1);

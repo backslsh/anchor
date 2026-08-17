@@ -161,9 +161,11 @@ Your phone must be on the same network as the PC.
 
 ### Two things that will happen the first time
 
-**A certificate warning.** The cert is self-signed and generated on first run
-(SANs for every local IP, 825-day validity so iOS accepts it). Tap
-*Advanced → Continue*. You must accept it — see below.
+**A certificate warning.** The cert is self-signed and generated on first run,
+in-process — Anchor builds the X.509 itself, so nothing needs to be installed
+and OpenSSL is not required. It covers `localhost` and every local IP, and is
+issued for under 825 days so iOS accepts it. Tap *Advanced → Continue*. You must
+accept it — see below.
 
 **It will ask for your passphrase, then pull your history down.** No export or
 import needed. The phone fetches the PC's KDF salt, you type the same
