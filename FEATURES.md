@@ -164,17 +164,45 @@ Not decoration — it is your streak rendered in WebGL:
 | Click the streak number | Live second counter |
 | Type `calm` | Breathing exercise |
 | Type `why` | Your own reasons, read back to you |
-| Konami code | Unlocks the **Ash** theme early |
+| Konami code | Unlocks **Terminal**, a theme that is not on the ladder at all |
 
 Plus milestone confetti and toasts, tips that drip out as you use it (resettable
 from Settings), and a `window.anchor` console surface for the curious.
 
 ---
 
+## Theme ladder
+
+You start with two themes. The rest are earned by your **longest clean run**:
+
+| Theme | Unlocks at |
+| --- | --- |
+| Aurora, Tide | from the start |
+| Moss | 7 days |
+| Ember | 15 days |
+| Rose | 30 days |
+| Ash | 60 days |
+| Glacier | 90 days |
+| Copper | 180 days |
+| **Aurelian** | **365 days** |
+
+Copper and Aurelian go further than a hue swap — they retint the whole
+interface, so arriving at one looks like a different app.
+
+Unlocks key off your *longest* run, never your current one. A relapse costs you
+the streak counter; it never takes a theme back. Settings shows the locked ones
+greyed out with what they cost, so there is always something to aim at, and a
+small celebration fires the moment one is earned.
+
+There is also a tenth theme that is not on the ladder and is not listed
+anywhere until you find it.
+
+---
+
 ## Interface
 
 - Dark throughout, built as a single page with no separate homepage
-- Six accent themes: Aurora, Tide, Moss, Ember, Rose, and **Ash** — earned at a 90-day run
+- Nine accent themes on an unlock ladder — see below
 - Week starts Sunday or Monday
 - Clean-day markers toggleable on the calendar
 - Fully responsive; the sidebar becomes a bottom bar on mobile

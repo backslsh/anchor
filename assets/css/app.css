@@ -37,14 +37,40 @@ body{margin:0}
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Inter,Roboto,system-ui,sans-serif;
   --mono:"JetBrains Mono","SF Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
 }
-html[data-accent="aurora"]{--a1:#7c5cff;--a2:#00d6c2;--accent-soft:rgba(124,92,255,.16)}
-html[data-accent="ember"] {--a1:#ff7a45;--a2:#ffc861;--accent:#ff7a45;--accent-soft:rgba(255,122,69,.16)}
-html[data-accent="tide"]  {--a1:#2f9bff;--a2:#61e8ff;--accent:#2f9bff;--accent-soft:rgba(47,155,255,.16)}
-html[data-accent="moss"]  {--a1:#3ddc97;--a2:#a8e05f;--accent:#3ddc97;--accent-soft:rgba(61,220,151,.16)}
-html[data-accent="rose"]  {--a1:#ff5c9d;--a2:#c17bff;--accent:#ff5c9d;--accent-soft:rgba(255,92,157,.16)}
-html[data-accent="ash"]   {--a1:#9aa6bd;--a2:#d7e0f0;--accent:#9aa6bd;--accent-soft:rgba(154,166,189,.16)}
-html[data-accent="ember"],html[data-accent="tide"],html[data-accent="moss"],
-html[data-accent="rose"],html[data-accent="ash"]{--accent:var(--a1)}
+/* ── themes ──────────────────────────────────────────────────
+   Each one only has to declare its two accent colours; --accent and
+   --accent-soft derive from them. The higher tiers also retint the surfaces,
+   so arriving at one feels like more than a hue swap.
+   Unlock requirements live in assets/js/themes.js. */
+html[data-accent]{--accent:var(--a1);--accent-soft:color-mix(in srgb,var(--a1) 16%,transparent)}
+
+html[data-accent="aurora"]  {--a1:#7c5cff;--a2:#00d6c2}
+html[data-accent="tide"]    {--a1:#2f9bff;--a2:#61e8ff}
+html[data-accent="moss"]    {--a1:#3ddc97;--a2:#a8e05f}
+html[data-accent="ember"]   {--a1:#ff7a45;--a2:#ffc861}
+html[data-accent="rose"]    {--a1:#ff5c9d;--a2:#c17bff}
+html[data-accent="ash"]     {--a1:#9aa6bd;--a2:#d7e0f0}
+html[data-accent="glacier"] {--a1:#4fd8ff;--a2:#d6f4ff}
+
+/* 180 days — warm metal, one step short of gold */
+html[data-accent="copper"]{
+  --a1:#d9784f;--a2:#f0b98c;
+  --bg:#0a0705;--bg-2:#100b08;--surface:#150f0b;--surface-2:#1c1510;--surface-3:#251c15;
+  --line:#302319;--line-soft:#241a13;
+}
+/* 365 days — the one you only see after a year */
+html[data-accent="aurelian"]{
+  --a1:#e0b04a;--a2:#ffe6a6;
+  --bg:#090803;--bg-2:#0f0c06;--surface:#151109;--surface-2:#1c170d;--surface-3:#251f14;
+  --line:#332a18;--line-soft:#261f12;--text:#f4eede;--text-2:#b3a888;--text-3:#7d735a;
+}
+/* not on the ladder — found, not earned */
+html[data-accent="terminal"]{
+  --a1:#3ef58b;--a2:#c9ffdf;
+  --bg:#030604;--bg-2:#061009;--surface:#07140c;--surface-2:#0a1c11;--surface-3:#0f2718;
+  --line:#153b23;--line-soft:#0f2c1a;--text:#d6ffe6;--text-2:#7fbf9a;--text-3:#4d7d63;
+  --font:var(--mono);
+}
 
 body{
   font-family:var(--font);
@@ -389,6 +415,34 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   background-repeat:no-repeat;background-position:right 12px center;background-size:12px;padding-right:34px;cursor:pointer}
 .inp::placeholder{color:var(--text-3)}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+/* ── theme ladder ─────────────────────────────────────────── */
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px}
+.theme{display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 8px 10px;
+  border-radius:var(--r);border:1px solid var(--line-soft);background:var(--surface);
+  transition:.2s var(--ease);position:relative;overflow:hidden}
+.theme:hover{transform:translateY(-2px);border-color:var(--line);background:var(--surface-2)}
+.theme.on{border-color:var(--accent);background:var(--accent-soft)}
+.theme.on::after{content:"";position:absolute;inset:0;border-radius:var(--r);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent);pointer-events:none}
+.theme-swatch{width:100%;height:34px;border-radius:9px;display:grid;place-items:center;
+  box-shadow:0 3px 14px -4px rgba(0,0,0,.7)}
+.theme-name{font-size:12.5px;font-weight:560;letter-spacing:-.01em}
+.theme-req{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);
+  font-variant-numeric:tabular-nums}
+.theme.locked{cursor:not-allowed}
+.theme.locked .theme-swatch{filter:grayscale(.85) brightness(.5)}
+.theme.locked .theme-name{color:var(--text-3)}
+.theme.locked:hover{transform:none}
+.theme.locked:hover .theme-swatch{filter:grayscale(.5) brightness(.75)}
+.theme-lock{font-size:14px;filter:none;opacity:.9}
+
+@keyframes themeUnlock{
+  0%{transform:scale(.9);opacity:0}
+  55%{transform:scale(1.06)}
+  100%{transform:scale(1);opacity:1}
+}
+.theme.just-earned{animation:themeUnlock .6s var(--ease-out) both}
+
 .swatches{display:flex;flex-wrap:wrap;gap:8px}
 .sw{width:30px;height:30px;border-radius:9px;border:2px solid transparent;position:relative;transition:.18s var(--ease)}
 .sw:hover{transform:scale(1.13)}

@@ -5,6 +5,7 @@ import * as S from './store.js';
 import * as vault from './vault.js';
 import * as sync from './sync.js';
 import { hasSubtle } from './crypto.js';
+import { THEMES, ladder, isUnlocked, safeAccent, theme as themeById } from './themes.js';
 import { mountField } from './scene.js';
 import * as UI from './ui.js';
 import { relapseDialog, habitDialog, goalDialog, dayDialog } from './forms.js';
@@ -144,7 +145,7 @@ function lock() {
 let wired = false;
 
 function startApp() {
-  document.documentElement.dataset.accent = S.setting('accent') || 'aurora';
+  applyAccent();
   $('#shell').classList.remove('hidden');
 
   S.setSaveErrorHandler(e =>
@@ -166,6 +167,7 @@ function startApp() {
   go(current, true);
   startSync();
   setTimeout(offerRecovery, 500);
+  setTimeout(checkThemeUnlocks, 1400);
 
   if (!hasSubtle()) setTimeout(insecureWarning, 900);
   else if (isRemote && !vault.isProtected()) setTimeout(remoteWarning, 900);
@@ -194,6 +196,40 @@ async function startSync() {
     else if (r === 'seeded') UI.toast('Sync started', { sub: 'Your vault now also lives on this machine, encrypted.', kind: 'ok' });
     else if (r === 'denied') UI.toast('Sync refused', { sub: sync.status().lastError, kind: 'bad', ms: 8000 });
   }
+}
+
+/* ── themes ─────────────────────────────────────────────────── */
+
+/** Apply the stored accent, falling back if it is not actually unlocked. */
+function applyAccent() {
+  const best = S.longestStreak().days;
+  const id = safeAccent(S.setting('accent'), best, S.setting('unlocked'));
+  if (id !== S.setting('accent')) S.setSetting('accent', id);
+  document.documentElement.dataset.accent = id;
+}
+
+/**
+ * Announce any theme the current record has earned but that has not been
+ * acknowledged yet. Keyed on longest streak, so this fires once when the rung
+ * is reached and never un-fires afterwards.
+ */
+function checkThemeUnlocks() {
+  const best = S.longestStreak().days;
+  const manual = S.setting('unlocked');
+  const earned = ladder().filter(t =>
+    t.req > 0 && isUnlocked(t, best, manual) && !S.wasSeen('theme:' + t.id));
+  if (!earned.length) return;
+
+  // On a first run with existing history, mark the backlog quietly and only
+  // celebrate the highest — nobody wants six popups in a row.
+  const show = earned[earned.length - 1];
+  for (const t of earned) S.markSeen('theme:' + t.id);
+
+  UI.confetti({ count: 130, colors: [show.c[0], show.c[1], '#ffffff'] });
+  UI.toast(`${show.label} unlocked`, {
+    sub: `${show.req} clean days. ${earned.length > 1 ? `${earned.length} themes are now open. ` : ''}Settings → Appearance.`,
+    kind: 'ok', ms: 9000,
+  });
 }
 
 /**
@@ -457,13 +493,19 @@ function showWhy() {
 }
 
 /* ── secrets ────────────────────────────────────────────── */
+/* The Konami code grants Terminal, which is deliberately not on the ladder —
+   the ladder is earned, this one is found. It must never hand out a rung
+   somebody else is still working toward. */
 function secretTheme() {
-  const fresh = S.unlockTheme('ash');
-  S.setSetting('accent', 'ash');
-  document.documentElement.dataset.accent = 'ash';
-  UI.confetti({ count: 90, colors: ['#9aa6bd', '#d7e0f0', '#ffffff'] });
-  UI.toast(fresh ? 'Ash unlocked' : 'Ash again',
-    { sub: fresh ? 'You were not supposed to find that yet.' : 'Welcome back.', kind: 'ok' });
+  const t = themeById('terminal');
+  const fresh = S.unlockTheme('terminal');
+  S.setSetting('accent', 'terminal');
+  document.documentElement.dataset.accent = 'terminal';
+  UI.confetti({ count: 110, colors: [t.c[0], t.c[1], '#ffffff'] });
+  UI.toast(fresh ? 'Terminal unlocked' : 'Terminal again', {
+    sub: fresh ? 'Not on the ladder. You found it instead of earning it.' : 'Welcome back.',
+    kind: 'ok', ms: 7000,
+  });
   rerender();
 }
 

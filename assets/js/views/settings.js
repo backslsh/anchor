@@ -8,45 +8,55 @@ import { strength, hasSubtle } from '../crypto.js';
 import { modal, toast, field, segmented, switchRow, confirmDialog, confetti, toggleShortcuts } from '../ui.js';
 import { quotePool } from '../quotes.js';
 
-const ACCENTS = [
-  { id: 'aurora', label: 'Aurora', c: ['#7c5cff', '#00d6c2'] },
-  { id: 'tide',   label: 'Tide',   c: ['#2f9bff', '#61e8ff'] },
-  { id: 'moss',   label: 'Moss',   c: ['#3ddc97', '#a8e05f'] },
-  { id: 'ember',  label: 'Ember',  c: ['#ff7a45', '#ffc861'] },
-  { id: 'rose',   label: 'Rose',   c: ['#ff5c9d', '#c17bff'] },
-  { id: 'ash',    label: 'Ash',    c: ['#9aa6bd', '#d7e0f0'], lock: 90,
-    note: 'Unlocks at a 90-day run' },
-];
+import { THEMES, isUnlocked, nextLocked, unlockedCount } from '../themes.js';
 
 export function render(root, ctx) {
   clear(root);
   ctx.setSub('');
-  const streak = S.currentStreak().days;
-  const unlocked = S.setting('unlocked');
+  const best = S.longestStreak().days;
+  const manual = S.setting('unlocked');
+  const current = S.setting('accent');
+  const next = nextLocked(best, manual);
 
   /* ── appearance ─────────────────────────────────────── */
   root.appendChild(section('Appearance',
     el('div',
-      el('label.fl', 'Accent'),
-      el('div.row.wrap', { style: { gap: '10px' } }, ACCENTS.map(a => {
-        const locked = a.lock && streak < a.lock && !unlocked.includes(a.id);
-        const b = el('button.chip', {
-          style: { opacity: locked ? .4 : 1, borderColor: S.setting('accent') === a.id ? a.c[0] : '',
-                   background: S.setting('accent') === a.id ? a.c[0] + '22' : '' },
-          title: locked ? a.note : a.label,
-        },
-          el('span', { style: { width: '26px', height: '13px', borderRadius: '4px', display: 'inline-block',
-            background: `linear-gradient(90deg,${a.c[0]},${a.c[1]})` } }),
-          a.label, locked ? el('span.muted', { style: { fontSize: '11px' } }, '🔒') : null);
-        b.onclick = () => {
-          if (locked) { toast('Locked', { sub: a.note, kind: 'warn' }); return; }
-          S.setSetting('accent', a.id);
-          document.documentElement.dataset.accent = a.id;
+      el('div.row-b', { style: { marginBottom: '10px' } },
+        el('label.fl', { style: { margin: 0 } }, 'Theme'),
+        el('span.hint', `${unlockedCount(best, manual)} of ${THEMES.filter(t => !t.secret).length} unlocked`)),
+
+      el('div.themes', THEMES.map(t => {
+        const open = isUnlocked(t, best, manual);
+        if (t.secret && !open) return null;              // stays hidden until found
+        const on = current === t.id;
+        const card = el('button.theme' + (on ? '.on' : '') + (open ? '' : '.locked'),
+          { type: 'button', title: open ? t.note : `Unlocks at a ${t.req}-day run` },
+          el('span.theme-swatch', { style: { background: `linear-gradient(135deg,${t.c[0]},${t.c[1]})` } },
+            open ? null : el('span.theme-lock', '🔒')),
+          el('span.theme-name', t.label),
+          el('span.theme-req',
+            open ? (t.req > 0 ? `${t.req}d` : t.secret ? 'secret' : 'start') : `${t.req}d`));
+        card.onclick = () => {
+          if (!open) {
+            toast(`${t.label} is still locked`, {
+              sub: `Reach a ${t.req}-day run to unlock it. Your best so far is ${best}.`,
+              kind: 'warn', ms: 5000,
+            });
+            return;
+          }
+          S.setSetting('accent', t.id);
+          document.documentElement.dataset.accent = t.id;
           ctx.rerender();
         };
-        return b;
+        return card;
       })),
-      el('p.hint', { style: { marginTop: '10px' } }, 'One theme is earned rather than chosen. There may be others.')),
+
+      next
+        ? el('p.hint', { style: { marginTop: '12px' } },
+            `Next up: ${next.label} at ${next.req} days — ${next.req - best} to go. ` +
+            'Themes unlock on your longest run ever, so a slip never takes one back.')
+        : el('p.hint', { style: { marginTop: '12px' } },
+            'Every theme on the ladder is yours. There may still be one that is not on it.')),
 
     field('Week starts on', segmented(
       [{ value: 0, label: 'Sunday' }, { value: 1, label: 'Monday' }],
