@@ -79,16 +79,22 @@ export function commit(fn) {
   schedule();
   return r;
 }
+/* Never write while the vault is locked. After lock() the in-memory state is
+   blank by design, and persisting that would overwrite the real record — the
+   same guard load() already applies in the other direction. */
+const canPersist = () => !sealed && vault.isUnlocked();
+
 function schedule() {
-  if (sealed) return;
+  if (!canPersist()) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
+    if (!canPersist()) return;
     vault.save(S).then(() => afterSave()).catch(e => onSaveError(e));
   }, 220);
 }
 export function flush() {
   clearTimeout(saveTimer);
-  if (sealed) return Promise.resolve();
+  if (!canPersist()) return Promise.resolve();
   return vault.save(S);
 }
 

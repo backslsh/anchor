@@ -165,6 +165,7 @@ function startApp() {
   S.reconcileGoals();
   go(current, true);
   startSync();
+  setTimeout(offerRecovery, 500);
 
   if (!hasSubtle()) setTimeout(insecureWarning, 900);
   else if (isRemote && !vault.isProtected()) setTimeout(remoteWarning, 900);
@@ -193,6 +194,42 @@ async function startSync() {
     else if (r === 'seeded') UI.toast('Sync started', { sub: 'Your vault now also lives on this machine, encrypted.', kind: 'ok' });
     else if (r === 'denied') UI.toast('Sync refused', { sub: sync.status().lastError, kind: 'bad', ms: 8000 });
   }
+}
+
+/**
+ * If the vault opened empty but the previous payload still holds a real record,
+ * offer to put it back. Earlier builds could overwrite an encrypted vault with
+ * blank plaintext on lock; this is the way out for anyone that happened to.
+ */
+async function offerRecovery() {
+  if (S.relapses().length || S.habits({ all: true }).length) return;
+  let backup = null;
+  try { backup = await vault.readBackup(); } catch { return; }
+  const n = backup?.relapses?.length || 0;
+  const h = backup?.habits?.length || 0;
+  if (!n && !h) return;
+
+  UI.modal({
+    title: 'Recover your record?',
+    sub: 'This vault is empty, but the previous copy is not.',
+    body: el('div', { style: { display: 'grid', gap: '14px' } },
+      el('div.notice', el('span', '⚠'), el('span',
+        `Anchor found an earlier copy holding ${plural(n, 'entry', 'entries')} across ` +
+        `${plural(h, 'habit')}. A bug in an older build could blank a vault when it locked. ` +
+        'Restoring puts that copy back.')),
+      el('p.hint', { style: { fontSize: '13px', lineHeight: 1.7 } },
+        'If you genuinely meant to erase everything, dismiss this — the empty vault stays as it is.')),
+    footer: [
+      { label: 'Leave it empty', onClick: c => c() },
+      { label: 'Restore', cls: 'btn-primary', onClick: async c => {
+          S.hydrate(backup);
+          await S.flush();
+          c();
+          UI.toast('Record restored', { sub: `${plural(n, 'entry', 'entries')} back in place.`, kind: 'ok', ms: 7000 });
+          rerender();
+        } },
+    ],
+  });
 }
 
 /** Called once a passphrase exists, so sync can begin without a page reload. */

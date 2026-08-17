@@ -98,16 +98,39 @@ export async function load() {
   return decryptJSON(key, p);
 }
 
+const isCiphertext = raw => {
+  try { const p = JSON.parse(raw); return !!p && typeof p.ct === 'string'; } catch { return false; }
+};
+
 export async function save(data) {
+  // Absence of a key means LOCKED, not UNENCRYPTED. Deciding by `key` alone let
+  // the beforeunload/visibilitychange flush that fires after an idle auto-lock
+  // write blank plaintext straight over the encrypted vault, destroying it.
+  if (isProtected() && !key) throw new Error('locked');
+
   const prev = localStorage.getItem(K_DATA);
   const payload = key ? await encryptJSON(key, data) : { plain: data };
   try {
     localStorage.setItem(K_DATA, JSON.stringify(payload));
-    if (prev) localStorage.setItem(K_BAK, prev);
+    // Never let a plaintext write bury an encrypted backup — that backup may be
+    // the only surviving copy if anything ever goes wrong again.
+    if (prev && (key || !isCiphertext(prev))) localStorage.setItem(K_BAK, prev);
   } catch (e) {
     throw new Error('Storage write failed — browser storage may be full or blocked. ' + e.message);
   }
 }
+
+/** The previous payload, decrypted if possible. Null when there is nothing usable. */
+export async function readBackup() {
+  const raw = localStorage.getItem(K_BAK);
+  if (!raw) return null;
+  let p;
+  try { p = JSON.parse(raw); } catch { return null; }
+  if (p.plain !== undefined) return p.plain;
+  if (!key) return null;
+  try { return await decryptJSON(key, p); } catch { return null; }
+}
+export const hasBackup = () => !!localStorage.getItem(K_BAK);
 
 /** Portable export. If a passphrase is given the file itself is encrypted. */
 export async function exportBlob(data, passphrase) {

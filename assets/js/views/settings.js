@@ -126,6 +126,9 @@ export function render(root, ctx) {
     el('div.row.wrap', { style: { gap: '10px', marginTop: '4px' } },
       el('button.btn.btn-ghost', { onclick: () => exportDialog() }, '↓ Export backup'),
       el('button.btn.btn-ghost', { onclick: () => importDialog(ctx) }, '↑ Import backup'),
+      vault.hasBackup()
+        ? el('button.btn.btn-ghost', { onclick: () => restoreDialog(ctx) }, '⟲ Previous version')
+        : null,
       el('button.btn.btn-danger', { onclick: () => wipeDialog(ctx) }, 'Erase everything')),
 
     el('p.hint',
@@ -328,6 +331,54 @@ function importDialog(ctx) {
             toast('Backup imported', { sub: `${S.relapses().length} entries now on this device.`, kind: 'ok' });
             ctx.rerender();
           } catch (e) { err.textContent = e.message; }
+        } },
+    ],
+  });
+}
+
+/** Roll back to the payload written immediately before the current one. */
+function restoreDialog(ctx) {
+  modal({
+    title: 'Restore the previous version',
+    sub: 'Anchor keeps the copy written just before the current one.',
+    body: (() => {
+      const box = el('div', { style: { display: 'grid', gap: '14px' } },
+        el('p.hint', { style: { fontSize: '13px' } }, 'Reading the previous copy…'));
+      vault.readBackup().then(bak => {
+        clear(box);
+        if (!bak) {
+          box.appendChild(el('div.notice', el('span', '⚠'), el('span',
+            'The previous copy cannot be read. It may have been written under a different passphrase.')));
+          return;
+        }
+        const n = bak.relapses?.length || 0, h = bak.habits?.length || 0;
+        const now = S.relapses().length;
+        box.append(
+          el('div.kpi',
+            kbox(String(now), 'Entries now'),
+            kbox(String(n), 'In the previous copy')),
+          n < now
+            ? el('div.notice', el('span', '⚠'), el('span',
+                'The previous copy holds fewer entries than you have now. Restoring would lose the difference. ' +
+                'Export a backup first if you are unsure.'))
+            : el('div.notice.info', el('span', 'ℹ'), el('span',
+                `Restoring replaces the current vault with ${plural(n, 'entry', 'entries')} across ${plural(h, 'habit')}.`)));
+        box.dataset.ready = '1';
+        box._backup = bak;
+      });
+      return box;
+    })(),
+    footer: [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Restore it', cls: 'btn-primary', onClick: async c => {
+          const box = document.querySelector('#modal-box div');
+          const bak = box?._backup;
+          if (!bak) { toast('Nothing to restore', { kind: 'warn' }); return; }
+          S.hydrate(bak);
+          await S.flush();
+          c();
+          toast('Previous version restored', { kind: 'ok' });
+          ctx.rerender();
         } },
     ],
   });
