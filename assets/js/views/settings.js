@@ -89,14 +89,30 @@ export function render(root, ctx) {
             ? 'Your vault is encrypted with AES-256-GCM. The key is derived from your passphrase and is never stored — losing it means losing the data.'
             : 'Your data is currently stored in plain text in this browser. That is fine on a machine only you use. Set a passphrase before you host this anywhere.')),
 
-    demo ? null : el('div.row.wrap', { style: { gap: '10px' } },
-      el('button.btn.' + (prot ? 'btn-ghost' : 'btn-primary'), { onclick: () => passphraseDialog(ctx, prot) },
-        prot ? 'Change passphrase' : 'Set a passphrase'),
-      prot ? el('button.btn.btn-ghost', { onclick: () => ctx.lock() }, 'Lock now') : null,
-      prot ? el('button.btn.btn-danger', { onclick: () => removeProtection(ctx) }, 'Remove protection') : null),
+    demo
+      // A visible, obviously-inert control: hiding the feature entirely would
+      // make the demo look like it lacks one, and the passphrase is the point.
+      ? el('div.row.wrap', { style: { gap: '10px', alignItems: 'center' } },
+          el('button.btn.btn-ghost.is-dummy', {
+            type: 'button',
+            'aria-disabled': 'true',
+            title: 'Disabled in the live demo',
+            onclick: () => toast('Disabled in the demo', {
+              sub: 'A forgotten passphrase cannot be recovered, so the public demo will not let you set one. Run Anchor yourself and it works.',
+              kind: 'warn', ms: 7000,
+            }),
+          }, '🔒 Set a passphrase'),
+          el('span.badge.mute', 'does nothing here'))
+      : el('div.row.wrap', { style: { gap: '10px' } },
+          el('button.btn.' + (prot ? 'btn-ghost' : 'btn-primary'), { onclick: () => passphraseDialog(ctx, prot) },
+            prot ? 'Change passphrase' : 'Set a passphrase'),
+          prot ? el('button.btn.btn-ghost', { onclick: () => ctx.lock() }, 'Lock now') : null,
+          prot ? el('button.btn.btn-danger', { onclick: () => removeProtection(ctx) }, 'Remove protection') : null),
 
     demo ? el('p.hint',
-      'Run it yourself — npx anchor-tracker, or grab a build from the releases page — and the passphrase is available.') : null,
+      'This button is intentionally inert on the live demo. Run it yourself — ' +
+      'npx anchor-tracker, or a build from the releases page — and setting a ' +
+      'passphrase encrypts everything with AES-256-GCM.') : null,
 
     (!demo && prot) ? field('Auto-lock after inactivity', segmented(
       [{ value: 0, label: 'Never' }, { value: 5, label: '5 min' }, { value: 15, label: '15 min' }, { value: 60, label: '1 hour' }],

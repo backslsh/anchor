@@ -616,3 +616,9 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
 }
+
+/* An intentionally inert control (the demo's passphrase button). Visibly
+   present but obviously not functional, so the demo neither hides the feature
+   nor pretends it works. */
+.btn.is-dummy{opacity:.55;cursor:not-allowed;border-style:dashed}
+.btn.is-dummy:hover{opacity:.75;transform:none;background:var(--surface)}

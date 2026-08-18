@@ -66,6 +66,10 @@ async function boot() {
       const { seedDemo } = await import('./demo.js');
       seedDemo({ unlockAll: demoParam === 'unlocked' });
     } catch (e) { console.warn('[anchor] demo seed failed', e); }
+    // seedDemo() declines when a vault already exists — including a demo vault
+    // seeded by an older build, which has no demoMode flag. Mark it either way,
+    // or a returning visitor gets a working passphrase on the public demo.
+    if (S.setting('demoMode') !== true) S.setSetting('demoMode', true);
   }
 
   startApp();
