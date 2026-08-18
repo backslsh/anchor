@@ -247,12 +247,15 @@ export function render(root, ctx) {
   return () => {
     clearInterval(liveTimer);
     hideTip();
-    const leaving = gemCanvas;
+    // Capture the instance, not just the canvas. By the time this runs a new
+    // gem may already have replaced it, and destroying `gem` would kill the
+    // replacement — which is what was cancelling the shatter a moment after
+    // it started.
+    const leavingCanvas = gemCanvas, leavingGem = gem;
     setTimeout(() => {
-      if (leaving && !document.body.contains(leaving)) {
-        gem?.destroy();
-        gem = null; gemCanvas = null; gemSig = null;
-      }
+      if (!leavingCanvas || document.body.contains(leavingCanvas)) return;  // re-render
+      leavingGem?.destroy();
+      if (gem === leavingGem) { gem = null; gemCanvas = null; gemSig = null; }
     }, 0);
   };
 }

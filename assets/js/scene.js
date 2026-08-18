@@ -391,6 +391,14 @@ export function mountGem(canvas, opts = {}) {
 
   raf = requestAnimationFrame(frame);
 
+  // Readable animation state. Inferring this from the outside cost several
+  // wrong diagnoses; a shard phase is not visible in the DOM.
+  canvas.__gemState = () => ({
+    alive,
+    breaking: !!breaking, shatter: +shatter.toFixed(3), grow: +grow.toFixed(3),
+    streakDays: st.streakDays, shatterFrom: st.shatterFrom, wantedShatter: !!st.shatter,
+  });
+
   return {
     set(next) {
       const needsGeom = ['streakDays', 'bestDays', 'satellites'].some(k => k in next);
