@@ -66,8 +66,10 @@ export function render(root, ctx) {
     el('div.hero-r', canvas, el('div.gem-hint', gemHint(streak, longest, satellites.length))));
   root.appendChild(hero);
 
-  /* It shatters and regrows when the run has just been broken. */
-  const brokenToday = !streak.fresh && streak.days === 0;
+  /* It shatters and regrows when the run has just been broken. The break has
+     to animate the crystal the user was looking at a moment ago, so pass the
+     streak it had before the relapse — the new one is already down to nothing. */
+  const brokenToday = !streak.fresh && streak.days === 0 && lastSeenStreak > 0;
 
   gem?.destroy();
   gem = mountGem(canvas, {
@@ -76,7 +78,8 @@ export function render(root, ctx) {
     streakDays: streak.days,
     bestDays: longest.days,
     satellites,
-    shatter: brokenToday && lastSeenStreak > 0,
+    shatter: brokenToday,
+    shatterFrom: lastSeenStreak,
     onHover: (piece, ev, ghost) => {
       if (!piece) return hideTip();
       showTipAt(ev.clientX, ev.clientY, tipBody(piece.label, [

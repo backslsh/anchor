@@ -44,11 +44,17 @@ const norm = p => { const l = Math.hypot(...p) || 1; return [p[0]/l, p[1]/l, p[2
 const PREC = 'precision mediump float;\n';
 
 const VS = PREC + `
-attribute vec3 aPos, aNrm;
+attribute vec3 aPos, aNrm, aCen, aVel, aSpin;
 attribute float aGrow, aKind;
 uniform mat4 uProj, uView, uModel;
 uniform float uTime, uPulse, uGrow, uShatter, uSpan;
-varying vec3 vN, vW; varying float vKind, vAlive, vY;
+varying vec3 vN, vW; varying float vKind, vAlive, vY, vShard;
+
+/* Rodrigues rotation — turn v about a unit axis by angle a. */
+vec3 spinAbout(vec3 v, vec3 axis, float a){
+  float c = cos(a), s = sin(a);
+  return v * c + cross(axis, v) * s + axis * dot(axis, v) * (1.0 - c);
+}
 
 void main(){
   // each piece eases in on its own delay, so satellites appear in sequence
@@ -57,19 +63,38 @@ void main(){
   vAlive = e;
 
   vec3 p = aPos * e;
-  // shatter: pieces fly outward along their normal, then settle
-  p += aNrm * uShatter * (0.35 + aGrow * 0.5);
   p.y += sin(uTime * 0.8 + aGrow * 6.0) * 0.012;      // a slow drift, barely there
+  vec3 n = aNrm;
+
+  /* ── shatter ──
+     Every triangle leaves on its own trajectory: tumbling about its own
+     centroid, travelling along its own velocity, arcing down under gravity.
+     Moving the whole mesh as one unit only ever reads as shrinking. */
+  float sh = uShatter;
+  if (sh > 0.0001) {
+    vec3 cen   = aCen * e;
+    vec3 local = p - cen;
+
+    vec3 axis = normalize(aSpin + vec3(0.0, 0.0001, 0.0));
+    float ang = length(aSpin) * sh;
+    local = spinAbout(local, axis, ang);
+    n     = spinAbout(n,     axis, ang);
+
+    cen += aVel * sh * 1.15;          // outward, fastest at the moment of impact
+    cen.y -= 2.1 * sh * sh;           // and falling
+    p = cen + local;
+  }
+  vShard = sh;
 
   vec4 world = uModel * vec4(p, 1.0);
-  vN = normalize(mat3(uModel) * aNrm);
+  vN = normalize(mat3(uModel) * n);
   vW = world.xyz; vKind = aKind;
   vY = clamp(aPos.y / max(uSpan, 0.001) + 0.5, 0.0, 1.0);   // 0 at the base, 1 at the tip
   gl_Position = uProj * uView * world;
 }`;
 
 const FS = PREC + `
-varying vec3 vN, vW; varying float vKind, vAlive, vY;
+varying vec3 vN, vW; varying float vKind, vAlive, vY, vShard;
 uniform vec3 uEye, uA, uB;
 uniform float uPulse, uTime, uShatter;
 
@@ -89,10 +114,14 @@ void main(){
   col += fres * mix(uB, vec3(1.0), 0.5) * 0.85;          // rim light
   col += uB * 0.10 * (0.5 + 0.5 * sin(uTime * 1.3));      // faint inner life
   col += uPulse * 0.55 * uB;
-  col += uShatter * 0.4 * uB;
   col *= mix(1.0, 1.25, vKind);                           // satellites read brighter
 
-  float a = (0.80 + fres * 0.20) * vAlive * (1.0 - uShatter * 0.55);
+  // A shard flares white-hot as it breaks, then fades. Holding full opacity
+  // through the first third keeps the fracture readable before it disperses.
+  col += vShard * 0.65 * mix(uB, vec3(1.0), 0.4);
+  float fade = 1.0 - smoothstep(0.32, 1.0, vShard);
+
+  float a = (0.80 + fres * 0.20) * vAlive * fade;
   gl_FragColor = vec4(col * a, a);                        // premultiplied
 }`;
 
@@ -156,22 +185,50 @@ export function mountGem(canvas, opts = {}) {
   const st = { a: '#3a2f6b', b: '#7c5cff', spin: 0.16, streakDays: 0, bestDays: 0,
                satellites: [], shatter: false, ...opts };
 
-  let cluster, mesh, bPos, bNrm, bGrow, bKind, bGhost, ghostCount = 0;
+  let cluster, live, breaking = null;
+
+  /** Upload one cluster's triangles; returns the handles the draw call needs. */
+  function upload(pieces) {
+    const m = tessellate(pieces);
+    return {
+      count: m.count,
+      pos: mkBuf(gl, m.pos), nrm: mkBuf(gl, m.nrm),
+      grow: mkBuf(gl, m.grow), kind: mkBuf(gl, m.kind),
+      cen: mkBuf(gl, m.cen), vel: mkBuf(gl, m.vel), spin: mkBuf(gl, m.spin),
+    };
+  }
+  const release = b => {
+    if (!b) return;
+    for (const k of ['pos','nrm','grow','kind','cen','vel','spin']) if (b[k]) gl.deleteBuffer(b[k]);
+  };
+
+  let bGhost = null, ghostCount = 0;
 
   function rebuild() {
     cluster = buildCluster(st);
-    mesh = tessellate(cluster.pieces);
-    for (const b of [bPos, bNrm, bGrow, bKind, bGhost]) if (b) gl.deleteBuffer(b);
-    bPos = mkBuf(gl, mesh.pos); bNrm = mkBuf(gl, mesh.nrm);
-    bGrow = mkBuf(gl, mesh.grow); bKind = mkBuf(gl, mesh.kind);
+    release(live);
+    live = upload(cluster.pieces);
+    if (bGhost) { gl.deleteBuffer(bGhost); bGhost = null; ghostCount = 0; }
     if (cluster.ghost) {
       const w = wireframe(cluster.ghost.tris);
       bGhost = mkBuf(gl, w); ghostCount = w.length / 3;
-    } else { bGhost = null; ghostCount = 0; }
+    }
   }
   rebuild();
 
-  let pulse = 0, shatter = st.shatter ? 1 : 0, grow = st.shatter ? 0.15 : 0;
+  /* Shattering has to break the crystal the user was looking at, not the small
+     one that replaces it — so build the pre-relapse cluster and fly that apart,
+     then hand over to the new one and grow it from nothing. */
+  function beginShatter(fromDays) {
+    release(breaking);
+    const old = buildCluster({ ...st, streakDays: fromDays, bestDays: Math.max(st.bestDays, fromDays) });
+    breaking = upload(old.pieces);
+    shatter = 0;
+    grow = 0;          // the replacement waits until the pieces are gone
+  }
+
+  let pulse = 0, shatter = 0, grow = 0;
+  if (st.shatter && st.shatterFrom > st.streakDays) beginShatter(st.shatterFrom);
   let t = 0, rx = -0.08, ry = 0.5, vrx = 0, vry = 0, tx = 0, ty = 0;
   let raf = 0, alive = true, dragging = false, last = null, moved = 0;
   let hovered = -1, model = M4.ident();
@@ -192,8 +249,14 @@ export function mountGem(canvas, opts = {}) {
     const aspect = size();
     t = now / 1000;
 
-    grow = Math.min(1.45, grow + 0.016);          // runs past 1 so the last piece finishes
-    shatter *= 0.90;
+    /* Two phases. While pieces are in the air the replacement stays at zero;
+       once they have faded, the new crystal grows in. */
+    if (breaking) {
+      shatter += 0.016 / 1.15;                   // ~1.15s for the break
+      if (shatter >= 1) { release(breaking); breaking = null; shatter = 0; }
+    } else {
+      grow = Math.min(1.45, grow + 0.016);       // runs past 1 so the last piece finishes
+    }
     pulse *= 0.92;
     if (!dragging) {
       ry += st.spin * 0.016 + vry; rx += vrx; vry *= 0.94; vrx *= 0.94;
@@ -210,8 +273,8 @@ export function mountGem(canvas, opts = {}) {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);   // premultiplied
 
-    /* ghost first, behind everything */
-    if (ghostCount) {
+    /* ghost first, behind everything — hidden while the crystal is in pieces */
+    if (ghostCount && !breaking) {
       gl.useProgram(pLine);
       bindAttr(gl, pLine, 'aPos', bGhost);
       gl.uniformMatrix4fv(gl.getUniformLocation(pLine, 'uProj'), false, proj);
@@ -224,9 +287,12 @@ export function mountGem(canvas, opts = {}) {
     }
 
     /* solid, two-pass so a translucent body still resolves depth correctly */
+    const draw = breaking || live;
     gl.useProgram(pTri);
-    bindAttr(gl, pTri, 'aPos', bPos); bindAttr(gl, pTri, 'aNrm', bNrm);
-    bindAttr(gl, pTri, 'aGrow', bGrow, 1); bindAttr(gl, pTri, 'aKind', bKind, 1);
+    bindAttr(gl, pTri, 'aPos', draw.pos);  bindAttr(gl, pTri, 'aNrm', draw.nrm);
+    bindAttr(gl, pTri, 'aCen', draw.cen);  bindAttr(gl, pTri, 'aVel', draw.vel);
+    bindAttr(gl, pTri, 'aSpin', draw.spin);
+    bindAttr(gl, pTri, 'aGrow', draw.grow, 1); bindAttr(gl, pTri, 'aKind', draw.kind, 1);
     const u = n => gl.getUniformLocation(pTri, n);
     gl.uniformMatrix4fv(u('uProj'), false, proj);
     gl.uniformMatrix4fv(u('uView'), false, view);
@@ -236,14 +302,21 @@ export function mountGem(canvas, opts = {}) {
     gl.uniform3f(u('uEye'), 0, 0, CAM_Z);
     gl.uniform1f(u('uTime'), t);
     gl.uniform1f(u('uPulse'), pulse);
-    gl.uniform1f(u('uGrow'), grow);
-    gl.uniform1f(u('uShatter'), shatter);
+    gl.uniform1f(u('uGrow'), breaking ? 1.45 : grow);
+    gl.uniform1f(u('uShatter'), breaking ? shatter : 0);
     gl.uniform1f(u('uSpan'), cluster.span || 1);
 
-    gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.FRONT); gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
-    gl.cullFace(gl.BACK);  gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
-    gl.disable(gl.CULL_FACE);
+    // Two-pass so a translucent body still resolves depth. Shards tumble, so
+    // back-face culling would blink them; draw them double-sided instead.
+    if (breaking) {
+      gl.disable(gl.CULL_FACE);
+      gl.drawArrays(gl.TRIANGLES, 0, draw.count);
+    } else {
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.FRONT); gl.drawArrays(gl.TRIANGLES, 0, draw.count);
+      gl.cullFace(gl.BACK);  gl.drawArrays(gl.TRIANGLES, 0, draw.count);
+      gl.disable(gl.CULL_FACE);
+    }
   }
 
   /* ── picking: ray vs each piece's bounding sphere ── */
@@ -320,9 +393,10 @@ export function mountGem(canvas, opts = {}) {
       if (needsGeom) { rebuild(); grow = 0; }
     },
     pulse() { pulse = 1; },
-    shatter() { shatter = 1; grow = 0.15; },
+    shatter(fromDays) { beginShatter(fromDays ?? st.streakDays); },
     destroy() {
       alive = false; cancelAnimationFrame(raf);
+      release(live); release(breaking);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointerup', onUp);

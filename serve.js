@@ -86,13 +86,22 @@ const VAULT   = path.join(DATA, 'vault.json');
 const BACKUPS = path.join(DATA, 'backups');
 const MAX_BODY = 8 * 1024 * 1024;
 
-/* ── local addresses ─────────────────────────────────────────── */
+/* ── local addresses ───────────────────────────────────────────
+   A dev box is full of adapters a phone can never reach: VM bridges, WSL,
+   VPN tunnels, Hyper-V switches. Listing them all equally is how people end
+   up typing the wrong one and waiting for a timeout, so rank the plausible
+   ones first and say which is which. */
+const VIRTUAL = /vmware|virtualbox|vbox|hyper-v|vethernet|wsl|loopback|tunnel|tap-|tun\d|vpn|proton|nordlynx|tailscale|zerotier|docker|bluetooth/i;
+
 function lanAddresses() {
   const out = [];
   for (const [name, addrs] of Object.entries(os.networkInterfaces() || {}))
     for (const a of addrs || [])
-      if (a.family === 'IPv4' && !a.internal) out.push({ name, address: a.address });
-  return out;
+      if (a.family === 'IPv4' && !a.internal && !a.address.startsWith('169.254.'))
+        out.push({ name, address: a.address, virtual: VIRTUAL.test(name) });
+  // real adapters first, and Wi-Fi ahead of Ethernet since phones are on Wi-Fi
+  return out.sort((x, y) =>
+    (x.virtual - y.virtual) || (/wi-?fi|wlan/i.test(y.name) - /wi-?fi|wlan/i.test(x.name)));
 }
 
 /* ── DER encoding, just enough for one X.509 certificate ──────
@@ -418,12 +427,19 @@ server.listen(PORT, HOST, () => {
   console.log(`     On this PC:  ${scheme}://localhost:${PORT}/`);
   if (HOST === '0.0.0.0') {
     const addrs = lanAddresses();
-    if (addrs.length) {
-      console.log('');
-      console.log('     On your phone (same Wi-Fi):');
-      for (const a of addrs) console.log(`       ${scheme}://${a.address}:${PORT}/   (${a.name})`);
+    const real = addrs.filter(a => !a.virtual);
+    const virt = addrs.filter(a => a.virtual);
+    console.log('');
+    if (real.length) {
+      console.log('     On your phone — try this one first:');
+      for (const a of real) console.log(`       ${scheme}://${a.address}:${PORT}/   (${a.name})`);
     } else {
-      console.log('     No network adapter found — is Wi-Fi connected?');
+      console.log('     No ordinary network adapter found — is Wi-Fi connected?');
+    }
+    if (virt.length) {
+      console.log('');
+      console.log('     Ignore these — virtual adapters your phone cannot reach:');
+      for (const a of virt) console.log(`       ${a.address}  (${a.name})`);
     }
   }
   console.log(line);

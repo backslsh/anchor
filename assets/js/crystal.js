@@ -160,26 +160,62 @@ export function buildCluster({ streakDays = 0, bestDays = 0, satellites = [], fi
   return { pieces, ghost, tier, fit, span };
 }
 
-/** Flatten pieces into interleaved arrays for the GPU. */
+/**
+ * Flatten pieces into interleaved arrays for the GPU.
+ *
+ * Each triangle also carries its own centroid, a scatter velocity and a spin
+ * axis. Those are what let the shader fly the fragments apart individually
+ * when the crystal breaks — without them the whole mesh can only move as one
+ * lump, which reads as shrinking rather than shattering.
+ */
 export function tessellate(pieces) {
-  const pos = [], nrm = [], grow = [], kind = [], pid = [];
-  pieces.forEach((p, index) => {
+  const pos = [], nrm = [], grow = [], kind = [], cen = [], vel = [], spin = [];
+  let tri = 0;
+
+  pieces.forEach(p => {
     const k = p.kind === 'sat' ? 1 : 0;
     for (const t of p.tris) {
       const n = unit(cross(sub(t[1], t[0]), sub(t[2], t[0])));
-      for (const v of t) {
-        pos.push(v[0], v[1], v[2]);
+      const c = [(t[0][0] + t[1][0] + t[2][0]) / 3,
+                 (t[0][1] + t[1][1] + t[2][1]) / 3,
+                 (t[0][2] + t[1][2] + t[2][2]) / 3];
+
+      // Deterministic per-triangle randomness, so a shatter looks the same
+      // every time rather than shimmering between frames.
+      const rand = rng(0x9e37 + tri * 2654435761);
+      const jitter = () => (rand() - 0.5) * 2;
+
+      // Mostly outward along the face normal, with enough spread that pieces
+      // do not travel in a tidy shell, and a slight upward bias so they arc.
+      const v = unit([
+        n[0] * 1.6 + jitter() * 0.9,
+        n[1] * 1.2 + jitter() * 0.9 + 0.35,
+        n[2] * 1.6 + jitter() * 0.9,
+      ]);
+      const speed = 0.55 + rand() * 0.95;
+      const axis = unit([jitter(), jitter(), jitter()]);
+      const rate = (2.5 + rand() * 6.0) * (rand() < 0.5 ? -1 : 1);
+
+      for (const vert of t) {
+        pos.push(vert[0], vert[1], vert[2]);
         nrm.push(n[0], n[1], n[2]);
         grow.push(p.grow || 0);
         kind.push(k);
-        pid.push(index);
+        cen.push(c[0], c[1], c[2]);
+        vel.push(v[0] * speed, v[1] * speed, v[2] * speed);
+        // axis scaled by the rate: the shader takes normalize() for the axis
+        // and length() for how fast it tumbles, so one vec3 carries both.
+        spin.push(axis[0] * rate, axis[1] * rate, axis[2] * rate);
       }
+      tri++;
     }
   });
+
   return {
     pos: new Float32Array(pos), nrm: new Float32Array(nrm),
     grow: new Float32Array(grow), kind: new Float32Array(kind),
-    pid: new Float32Array(pid), count: pos.length / 3,
+    cen: new Float32Array(cen), vel: new Float32Array(vel), spin: new Float32Array(spin),
+    count: pos.length / 3,
   };
 }
 
