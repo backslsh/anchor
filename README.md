@@ -9,10 +9,10 @@ itself.**
 <p>
 <a href="https://www.npmjs.com/package/anchor-tracker"><img alt="npm" src="https://img.shields.io/npm/v/anchor-tracker?color=7c5cff&label=npm"></a>
 <a href="https://github.com/backslsh/anchor/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/backslsh/anchor?color=00d6c2"></a>
-<!-- <img alt="zero dependencies" src="https://img.shields.io/badge/dependencies-0-3ddc97"> -->
+<img alt="zero dependencies" src="https://img.shields.io/badge/dependencies-0-3ddc97">
 <a href="https://socket.dev/npm/package/anchor-tracker"><img alt="security score" src="https://badge.socket.dev/npm/package/anchor-tracker/1.1.1"></a>
-<img alt="telemetry: none" src="https://img.shields.io/badge/telemetry-none-3ddc97">
-<!-- <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/github/license/backslsh/anchor?color=9aa6bd"></a> -->
+<!-- <img alt="telemetry: none" src="https://img.shields.io/badge/telemetry-none-3ddc97">
+<a href="LICENSE"><img alt="MIT" src="https://img.shields.io/github/license/backslsh/anchor?color=9aa6bd"></a> -->
 <img alt="." src="https://github.com/backslsh/anchor/actions/workflows/release.yml/badge.svg">
 <img src="https://img.shields.io/npm/unpacked-size/anchor-tracker">
 </p>
