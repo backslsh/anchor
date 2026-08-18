@@ -71,19 +71,34 @@ export function render(root, ctx) {
 
   /* ── privacy & lock ─────────────────────────────────── */
   const prot = vault.isProtected();
-  root.appendChild(section('Privacy & lock',
-    el('div.notice' + (prot ? '.info' : ''), el('span', prot ? '🔐' : '⚠'),
-      el('span', prot
-        ? 'Your vault is encrypted with AES-256-GCM. The key is derived from your passphrase and is never stored — losing it means losing the data.'
-        : 'Your data is currently stored in plain text in this browser. That is fine on a machine only you use. Set a passphrase before you host this anywhere.')),
+  const demo = S.setting('demoMode') === true;
 
-    el('div.row.wrap', { style: { gap: '10px' } },
+  // In the sample vault the passphrase is deliberately unavailable. There is no
+  // recovery from a forgotten one, so a stranger poking at a public demo could
+  // otherwise lock a vault they never meant to own — and be met by a login
+  // screen they cannot pass on their next visit.
+  root.appendChild(section('Privacy & lock',
+    demo
+      ? el('div.notice.info', el('span', '🔎'), el('span',
+          'This is the sample vault, so the passphrase is switched off. In a real ' +
+          'install this is where you encrypt everything with AES-256-GCM, using a key ' +
+          'derived from a passphrase that is never stored. Because there is no recovery ' +
+          'from losing it, the demo does not let you set one.'))
+      : el('div.notice' + (prot ? '.info' : ''), el('span', prot ? '🔐' : '⚠'),
+          el('span', prot
+            ? 'Your vault is encrypted with AES-256-GCM. The key is derived from your passphrase and is never stored — losing it means losing the data.'
+            : 'Your data is currently stored in plain text in this browser. That is fine on a machine only you use. Set a passphrase before you host this anywhere.')),
+
+    demo ? null : el('div.row.wrap', { style: { gap: '10px' } },
       el('button.btn.' + (prot ? 'btn-ghost' : 'btn-primary'), { onclick: () => passphraseDialog(ctx, prot) },
         prot ? 'Change passphrase' : 'Set a passphrase'),
       prot ? el('button.btn.btn-ghost', { onclick: () => ctx.lock() }, 'Lock now') : null,
       prot ? el('button.btn.btn-danger', { onclick: () => removeProtection(ctx) }, 'Remove protection') : null),
 
-    prot ? field('Auto-lock after inactivity', segmented(
+    demo ? el('p.hint',
+      'Run it yourself — npx anchor-tracker, or grab a build from the releases page — and the passphrase is available.') : null,
+
+    (!demo && prot) ? field('Auto-lock after inactivity', segmented(
       [{ value: 0, label: 'Never' }, { value: 5, label: '5 min' }, { value: 15, label: '15 min' }, { value: 60, label: '1 hour' }],
       S.setting('autoLockMin'), v => { S.setSetting('autoLockMin', v); ctx.resetIdle(); toast(v ? `Auto-lock set to ${v} minutes` : 'Auto-lock off'); })) : null,
   ));
@@ -198,6 +213,13 @@ const kbox = (v, l) => el('div.kbox', el('b', v), el('span', l));
 
 /* ── passphrase ─────────────────────────────────────────── */
 function passphraseDialog(ctx, changing) {
+  if (S.setting('demoMode') === true) {
+    toast('Not available in the demo', {
+      sub: 'A forgotten passphrase cannot be recovered, so the sample vault does not let you set one.',
+      kind: 'warn', ms: 6000,
+    });
+    return;
+  }
   let current = '', next = '', confirm = '', hint = '';
   const meter = el('div.strength', el('span'));
   const err = el('p.lock-err');

@@ -53,13 +53,13 @@ const LESSONS = [
 ];
 
 /**
- * @param unlockAll  Hand the demo every theme, including the off-ladder secret,
- *                   so the palettes can actually be looked at. The demo vault
- *                   is the only place this happens — a real vault still has to
- *                   earn them. Pass false for authentic lock states, which is
- *                   what you want for screenshots of the ladder itself.
+ * @param unlockAll  Opt in to every theme, including the off-ladder secret.
+ *                   Off by default: a public demo should show the ladder
+ *                   honestly, with the rungs this streak has not reached still
+ *                   locked, because the progression is part of what is being
+ *                   demonstrated. Useful locally for looking at the palettes.
  */
-export function buildDemoVault({ unlockAll = true } = {}) {
+export function buildDemoVault({ unlockAll = false } = {}) {
   const rand = rng(20260816);
   const day = n => iso(addDays(new Date(), -n));
   const pick = arr => arr[Math.floor(rand() * arr.length)];
@@ -167,6 +167,9 @@ export function buildDemoVault({ unlockAll = true } = {}) {
       ...base.settings,
       favoriteQuotes: ['q56', 'q78'],
       unlocked: unlockAll ? THEMES.map(t => t.id) : [],
+      // Lets the app disable anything a stranger could use to lock themselves
+      // out of a vault they never intended to own.
+      demoMode: true,
       seen: {
         welcome: Date.now(), 'tip:shift': Date.now(), 'tip:palette': Date.now(),
         'tip:gem': Date.now(), 'tip:lesson': Date.now(), 'tip:live': Date.now(),
@@ -185,7 +188,7 @@ export function buildDemoVault({ unlockAll = true } = {}) {
  * Load the sample vault. Refuses if there is anything real here, so it can
  * never overwrite a genuine record.
  */
-export function seedDemo({ force = false, unlockAll = true } = {}) {
+export function seedDemo({ force = false, unlockAll = false } = {}) {
   if (!force && (S.relapses().length || S.habits({ all: true }).length)) {
     console.warn('[anchor] demo: this vault already has data. seedDemo({force:true}) to replace it.');
     return false;

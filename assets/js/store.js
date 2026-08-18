@@ -42,6 +42,9 @@ export function blank() {
       // null = never decided, so sync switches itself on as soon as a
       // passphrase exists. true/false is an explicit choice and is respected.
       syncEnabled: null,
+      // true only in the sample vault; disables the passphrase, which a
+      // visitor to a public demo could otherwise use to lock themselves out
+      demoMode: false,
     },
     savedAt: null,        // stamped on every write; arbitrates a sync merge
   };

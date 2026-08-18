@@ -58,13 +58,13 @@ async function boot() {
 
   // ?demo fills an *empty* vault with sample data. It cannot touch a real one:
   // seedDemo() bails if any habit or entry already exists.
-  // ?demo=locked keeps authentic theme lock states, for screenshots of the
-  // ladder; the plain form unlocks every theme so they can be looked at.
+  // Theme locks are authentic by default, because the ladder is part of what a
+  // visitor should see. ?demo=unlocked opens every palette for a closer look.
   const demoParam = new URLSearchParams(location.search).get('demo');
   if (demoParam !== null) {
     try {
       const { seedDemo } = await import('./demo.js');
-      seedDemo({ unlockAll: demoParam !== 'locked' });
+      seedDemo({ unlockAll: demoParam === 'unlocked' });
     } catch (e) { console.warn('[anchor] demo seed failed', e); }
   }
 
@@ -172,9 +172,12 @@ function startApp() {
   setTimeout(offerRecovery, 500);
   setTimeout(checkThemeUnlocks, 1400);
 
-  if (!hasSubtle()) setTimeout(insecureWarning, 900);
-  else if (isRemote && !vault.isProtected()) setTimeout(remoteWarning, 900);
-  else setTimeout(firstRun, 700);
+  const isDemo = S.setting('demoMode') === true;
+  if (!hasSubtle() && !isDemo) setTimeout(insecureWarning, 900);
+  // The demo deliberately has no passphrase, so the "set one" nag would be
+  // advice a visitor cannot act on.
+  else if (isRemote && !vault.isProtected() && !isDemo) setTimeout(remoteWarning, 900);
+  else if (!isDemo) setTimeout(firstRun, 700);
 }
 
 /* ── sync ───────────────────────────────────────────────────── */
@@ -501,6 +504,15 @@ function showWhy() {
    somebody else is still working toward. */
 function secretTheme() {
   const t = themeById('terminal');
+  // Terminal stays hidden in the sample vault: the demo is meant to show the
+  // ladder as a new user meets it, and an off-ladder palette muddles that.
+  if (S.setting('demoMode') === true) {
+    UI.toast('Something is hidden here', {
+      sub: 'Not in the demo though. Run Anchor yourself and try that again.',
+      kind: 'ok', ms: 6000,
+    });
+    return;
+  }
   const fresh = S.unlockTheme('terminal');
   S.setSetting('accent', 'terminal');
   document.documentElement.dataset.accent = 'terminal';
