@@ -175,11 +175,9 @@ before a passphrase exists, because the store refuses unencrypted data.
 Load a sample vault — fourteen months of invented history with a real
 improvement arc, a 54-day run in progress against a 62-day record:
 
-```
-http://localhost:4321/?demo
-```
+[[https://backslsh.github.pages](https://backslsh.github.io/anchor/?demo)
 
-Or from the browser console: `anchor.demo()`
+Or from the browser console: `anchor.demo()` in your local instance.
 
 The demo shows the theme ladder honestly: six unlocked by the sample streak,
 three still locked, and the off-ladder secret hidden. Add `?demo=unlocked` if
@@ -189,8 +187,8 @@ The passphrase is switched off in the demo. There is no recovery from losing
 one, so a public sample vault should not let a passing visitor lock a record
 they never meant to own.
 
-It only fills an **empty** vault. If you already have a habit or a single entry
-it refuses, so it can never overwrite a real record. Clear it afterwards with
+It only fills an **empty** vault. If you already have a habit or a single entry,
+it refuses, so it can never overwrite a real record. Clear it afterward with
 **Settings → Erase everything**.
 
 ---
@@ -316,7 +314,7 @@ better than cleverer — a short memorable sentence beats `Xk7$q`.)*
 
 The object on the dashboard is not decoration. It is your streak:
 
-<img width="436" height="339" alt="image" src="https://github.com/user-attachments/assets/05f23cf6-b991-4312-94a7-7da33a611f38" />
+<img width="1666" height="958" alt="Recording_2026-08-18_135107_compressed" src="https://github.com/user-attachments/assets/6c04d878-0899-40ec-9a1e-b4db04085bca" />
 
 - **Height** is your current clean run measured against your personal best
 - The hollow **ghost** standing over it is that record — the gap between the two
