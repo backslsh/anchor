@@ -9,6 +9,12 @@ import { toast, confetti, attachTip, tipBody, showTipAt, hideTip } from '../ui.j
 import { relapseDialog, habitDialog, goalDialog, dayDialog } from '../forms.js';
 
 let gem = null, liveTimer = null, celebrating = null, lastSeenStreak = -1;
+/* The canvas and its WebGL context are kept across re-renders. Any store write
+   re-renders the dashboard — a toast, reconcileGoals(), a sync save — and
+   rebuilding the gem each time restarts its animations. That is what made the
+   shatter invisible: the render that began it was immediately followed by
+   another that threw the pieces away and grew a fresh crystal instead. */
+let gemCanvas = null, gemSig = null;
 
 export function render(root, ctx) {
   clear(root);
@@ -47,10 +53,18 @@ export function render(root, ctx) {
   const longest = S.longestStreak();
   const totals = S.totalCleanDays();
 
+  /* It shatters and regrows when the run has just been broken. The break must
+     animate the crystal the user was looking at a moment ago, so pass the
+     streak it had before the relapse — the new one is already down to nothing. */
+  const brokenToday = !streak.fresh && streak.days === 0 && lastSeenStreak > 0;
+
   /* One satellite crystal per milestone this run has cleared. */
   const satellites = S.MILESTONES.filter(m => m <= streak.days)
     .map(m => ({ days: m, label: streak.fresh ? null : `cleared ${fmtDate(iso(addDays(parseISO(streak.since), m)), 'short')}` }));
-  const canvas = el('canvas', { id: 'gem' });
+  /* Rebuild the gem only when something it actually draws has changed. */
+  const sig = [streak.days, longest.days, satellites.length, a1, a2, brokenToday].join('|');
+  const reuse = gem && gemCanvas && gemSig === sig;
+  const canvas = reuse ? gemCanvas : el('canvas', { id: 'gem' });
   const hero = el('div.hero',
     el('div.hero-l',
       el('div.hero-eyebrow', hs.length ? 'Current clean run' : 'Welcome to Anchor'),
@@ -66,11 +80,7 @@ export function render(root, ctx) {
     el('div.hero-r', canvas, el('div.gem-hint', gemHint(streak, longest, satellites.length))));
   root.appendChild(hero);
 
-  /* It shatters and regrows when the run has just been broken. The break has
-     to animate the crystal the user was looking at a moment ago, so pass the
-     streak it had before the relapse — the new one is already down to nothing. */
-  const brokenToday = !streak.fresh && streak.days === 0 && lastSeenStreak > 0;
-
+  if (!reuse) {
   gem?.destroy();
   gem = mountGem(canvas, {
     a: a1, b: a2,
@@ -89,6 +99,8 @@ export function render(root, ctx) {
     },
     onPick: () => hideTip(),
   });
+    gemCanvas = canvas; gemSig = sig;
+  }
   lastSeenStreak = streak.days;
 
   /* Milestone celebration, once per milestone. The markSeen() write happens
@@ -215,7 +227,10 @@ export function render(root, ctx) {
   grid.append(left, right);
   root.appendChild(grid);
 
-  return () => { clearInterval(liveTimer); hideTip(); gem?.destroy(); gem = null; };
+  return () => {
+    clearInterval(liveTimer); hideTip();
+    gem?.destroy(); gem = null; gemCanvas = null; gemSig = null;
+  };
 }
 
 /* ── pieces ─────────────────────────────────────────────── */
