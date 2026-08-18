@@ -29,6 +29,8 @@ permanent record you can amend but never erase.
 *No account. No subscription. No servers. No telemetry. No build step, and not a
 single dependency — clone it, run one command, and it works offline forever.*
 
+**Test Anchor Now: [https://backslsh.github.io/anchor/](https://backslsh.github.io/anchor/?demo)**
+
 Most habit and recovery trackers want an email address, a monthly fee, and a
 copy of the most private thing about you on someone else's database. Anchor is
 the other option: it is *private by architecture*, because there is no backend
