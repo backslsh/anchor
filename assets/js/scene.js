@@ -174,7 +174,12 @@ function recycle(canvas) {
 /**
  * opts: { streakDays, bestDays, satellites, a, b, spin, shatter, onHover, onPick }
  */
+let gemSerial = 0;
+
 export function mountGem(canvas, opts = {}) {
+  // Stamped so a rebuild is observable even if the element is replaced within
+  // a single frame — which is exactly how an earlier bug hid itself.
+  canvas.dataset.gemId = String(++gemSerial);
   let gl = null;
   try { gl = canvas.getContext('webgl', { antialias: true, alpha: true, premultipliedAlpha: true }); } catch {}
   if (!gl) return mountGem2D(canvas, opts);

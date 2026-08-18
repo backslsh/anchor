@@ -1,7 +1,7 @@
 /* views/dashboard.js */
 
 import { el, clear, humanDays, plural, relDate, fmt12, fmtDate, todayISO, pad,
-         iso, addDays, parseISO } from '../util.js';
+         iso, addDays, parseISO, dayDiff } from '../util.js';
 import * as S from '../store.js';
 import { quotePool, quoteFor } from '../quotes.js';
 import { mountGem, gemMotionFor } from '../scene.js';
@@ -15,6 +15,9 @@ let gem = null, liveTimer = null, celebrating = null, lastSeenStreak = -1;
    shatter invisible: the render that began it was immediately followed by
    another that threw the pieces away and grew a fresh crystal instead. */
 let gemCanvas = null, gemSig = null;
+/* The relapse whose break has already been animated, so a re-render or a
+   revisit does not replay it. */
+let shatteredFor = null;
 
 export function render(root, ctx) {
   clear(root);
@@ -53,16 +56,24 @@ export function render(root, ctx) {
   const longest = S.longestStreak();
   const totals = S.totalCleanDays();
 
-  /* It shatters and regrows when the run has just been broken. The break must
-     animate the crystal the user was looking at a moment ago, so pass the
-     streak it had before the relapse — the new one is already down to nothing. */
-  const brokenToday = !streak.fresh && streak.days === 0 && lastSeenStreak > 0;
+  /* It shatters and regrows when the run has just been broken.
+     The height to break from is derived from the record rather than remembered:
+     the gap between today's relapse and the one before it *is* the streak that
+     just ended, and unlike a module variable it survives a reload and a second
+     render. Played at most once per relapse. */
+  const priorRun = brokenRunLength();
+  const newest = S.sortedRelapses()[0];
+  const brokenToday = priorRun > 0 && newest && shatteredFor !== newest.id;
 
   /* One satellite crystal per milestone this run has cleared. */
   const satellites = S.MILESTONES.filter(m => m <= streak.days)
     .map(m => ({ days: m, label: streak.fresh ? null : `cleared ${fmtDate(iso(addDays(parseISO(streak.since), m)), 'short')}` }));
-  /* Rebuild the gem only when something it actually draws has changed. */
-  const sig = [streak.days, longest.days, satellites.length, a1, a2, brokenToday].join('|');
+  /* Rebuild the gem only when its geometry changes.
+     brokenToday must NOT be part of this. It is true on the render that starts
+     the break and false on the very next one, so including it guaranteed a
+     rebuild mid-shatter — the pieces were discarded a millisecond after they
+     appeared, leaving only the regrow. */
+  const sig = [streak.days, longest.days, satellites.length, a1, a2].join('|');
   const reuse = gem && gemCanvas && gemSig === sig;
   const canvas = reuse ? gemCanvas : el('canvas', { id: 'gem' });
   const hero = el('div.hero',
@@ -89,7 +100,7 @@ export function render(root, ctx) {
     bestDays: longest.days,
     satellites,
     shatter: brokenToday,
-    shatterFrom: lastSeenStreak,
+    shatterFrom: priorRun,
     onHover: (piece, ev, ghost) => {
       if (!piece) return hideTip();
       showTipAt(ev.clientX, ev.clientY, tipBody(piece.label, [
@@ -100,6 +111,7 @@ export function render(root, ctx) {
     onPick: () => hideTip(),
   });
     gemCanvas = canvas; gemSig = sig;
+    if (brokenToday && newest) shatteredFor = newest.id;
   }
   lastSeenStreak = streak.days;
 
@@ -227,10 +239,37 @@ export function render(root, ctx) {
   grid.append(left, right);
   root.appendChild(grid);
 
+  /* app.js runs this before every render, whether the dashboard is being
+     re-rendered or genuinely left. Destroying the gem here killed the reuse
+     outright — and with it the shatter. Decide afterwards instead: if the
+     canvas is back in the document, this was a re-render and the gem (and any
+     animation mid-flight) should live. */
   return () => {
-    clearInterval(liveTimer); hideTip();
-    gem?.destroy(); gem = null; gemCanvas = null; gemSig = null;
+    clearInterval(liveTimer);
+    hideTip();
+    const leaving = gemCanvas;
+    setTimeout(() => {
+      if (leaving && !document.body.contains(leaving)) {
+        gem?.destroy();
+        gem = null; gemCanvas = null; gemSig = null;
+      }
+    }, 0);
   };
+}
+
+/**
+ * Length of the clean run that today's relapse just ended, or 0 if the most
+ * recent entry is not from today. Read from the entries themselves, so it is
+ * correct regardless of what the previous render happened to see.
+ */
+function brokenRunLength() {
+  const all = S.sortedRelapses();
+  if (!all.length) return 0;
+  const newest = all[0];
+  if (newest.date !== todayISO()) return 0;
+  const prev = all.find(r => r.date < newest.date);
+  if (!prev) return 0;
+  return Math.max(0, dayDiff(prev.date, newest.date));
 }
 
 /* ── pieces ─────────────────────────────────────────────── */
