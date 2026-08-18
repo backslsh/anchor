@@ -25,6 +25,7 @@ itself.**
 
 > [!TIP]
 > Check out the LIVE demo here: [https://backslsh.github.io/anchor/](https://backslsh.github.io/anchor/?demo)
+> *If it shows streak as 0, open the Dev Console with F12 and paste this: `anchor.demo({force:true})` to reset it*
 
 Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
