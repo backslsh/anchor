@@ -4,7 +4,10 @@
 itself.**
 <div align="center">
 
-<img width="900" alt="Anchor dashboard" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" />
+<!-- <img width="900" alt="Anchor dashboard" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" /> -->
+<!-- <img width="1698" height="957" alt="anchor" src="https://github.com/user-attachments/assets/1ca4b4f3-62fb-4f65-b992-488f274d94a5" /> -->
+<img width="1698" height="957" alt="Screenshot 2026-08-17 170540" src="https://github.com/user-attachments/assets/3ea89679-046c-44d1-b222-2c759952aa1f" />
+
 
 <p>
 <a href="https://www.npmjs.com/package/anchor-tracker"><img alt="npm" src="https://img.shields.io/npm/v/anchor-tracker?color=7c5cff&label=npm"></a>
