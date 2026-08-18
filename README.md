@@ -23,6 +23,9 @@
 **A relapse tracker that runs on your own machine and keeps your record to
 itself.**
 
+> [!TIP]
+> Check out the LIVE demo here: [https://backslsh.github.io/anchor/](https://backslsh.github.io/anchor/?demo)
+
 Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
 
