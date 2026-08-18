@@ -23,8 +23,8 @@ itself.**
 Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
 
-No account. No subscription. No servers. No telemetry. No build step, and not a
-single dependency — clone it, run one command, and it works offline forever.
+*No account. No subscription. No servers. No telemetry. No build step, and not a
+single dependency — clone it, run one command, and it works offline forever.*
 
 Most habit and recovery trackers want an email address, a monthly fee, and a
 copy of the most private thing about you on someone else's database. Anchor is
