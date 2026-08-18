@@ -1,7 +1,3 @@
-# ⚓ Anchor
-
-**A relapse tracker that runs on your own machine and keeps your record to
-itself.**
 <div align="center">
 
 <!-- <img width="900" alt="Anchor dashboard" src="https://github.com/user-attachments/assets/4a608eda-cf26-48ea-94a3-6dd2a0ee4ada" /> -->
@@ -22,6 +18,10 @@ itself.**
 
 </div>
 
+# ⚓ Anchor
+
+**A relapse tracker that runs on your own machine and keeps your record to
+itself.**
 
 Habits with colors, a master calendar, goals, daily quotes, urge support, and a
 permanent record you can amend but never erase.
