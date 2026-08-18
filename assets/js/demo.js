@@ -3,9 +3,8 @@
  *
  * The shape is deliberate rather than random: fourteen months of history with a
  * real improvement arc, a 62-day personal best set a few months back, and a
- * 41-day run in progress. That puts the dashboard crystal at about two thirds
- * of its record ghost — high enough to look earned, short enough that the gap
- * you are still closing is the obvious thing on screen.
+ * 54-day run in progress. That puts the dashboard crystal near the top of its
+ * record ghost — visibly earned, with the remaining gap still legible.
  *
  * Seeded, so every run produces the same vault and screenshots stay stable.
  */
@@ -25,9 +24,14 @@ function rng(seed) {
 }
 
 const SPAN         = 430;   // days of history
-const CURRENT_RUN  = 41;    // last relapse this many days ago
+const CURRENT_RUN  = 54;    // last relapse this many days ago
 const RECORD_FROM  = 152;   // record gap runs between these two relapses
-const RECORD_TO    = 89;    // → 62 clean days, comfortably above the current run
+const RECORD_TO    = 89;    // → 62 clean days, still ahead of the current run
+
+/* 54 against a 62-day record puts the spire at ~87% of its ghost: a big,
+   well-earned crystal with eight satellites, while still leaving a visible
+   gap to close. Raising the run any further starts hiding the ghost, which
+   is the part that shows what the object is actually measuring. */
 
 const TRIGGERS = ['stress', 'bored', 'tired', 'late night', 'lonely', 'anxious',
   'social', 'argument', 'payday', 'weekend', 'unstructured', 'phone'];
@@ -137,8 +141,8 @@ export function buildDemoVault({ unlockAll = false } = {}) {
 
   /* ── goals ── */
   const goals = [
-    { id: 'g-1', kind: 'streak', habitId: 'h-scroll', target: 60,
-      title: '60 clean days from scrolling',
+    { id: 'g-1', kind: 'streak', habitId: 'h-scroll', target: 75,
+      title: '75 clean days from scrolling',
       createdAt: new Date(Date.now() - 44 * 86400000).toISOString(),
       archived: false, completedAt: null, done: false },
     { id: 'g-2', kind: 'cap', habitId: null, target: 4, window: 'month',

@@ -169,7 +169,7 @@ before a passphrase exists, because the store refuses unencrypted data.
 ## Trying it without committing to anything
 
 Load a sample vault — fourteen months of invented history with a real
-improvement arc, a 41-day run in progress against a 62-day record:
+improvement arc, a 54-day run in progress against a 62-day record:
 
 ```
 http://localhost:4321/?demo
