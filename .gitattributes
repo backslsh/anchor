@@ -3,6 +3,7 @@
 
 # Windows launchers need CRLF or cmd.exe mis-parses them.
 *.bat text eol=crlf
+*.vbs text eol=crlf
 
 # Never diff these as text.
 *.pem binary
